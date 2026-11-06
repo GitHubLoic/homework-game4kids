@@ -193,10 +193,9 @@ button { font-family: inherit; color: inherit; }
 .track-avatar.sailing { animation: rock .4s ease-in-out 3; }
 
 .streak {
-  position: fixed; top: 78px; right: 16px; z-index: 11;
-  background: linear-gradient(135deg, #ff8c42, #ff3d68); color: #fff;
+  background: linear-gradient(135deg, #ff8c42, #ff3d68); color: #fff; white-space: nowrap;
   font-size: 22px; font-weight: 700; padding: 6px 14px; border-radius: 999px;
-  box-shadow: 0 4px 0 rgba(0, 0, 0, .2); animation: pop .4s;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, .18); animation: pop .4s;
 }
 
 /* =================================================================
@@ -638,7 +637,7 @@ button { font-family: inherit; color: inherit; }
   .track-avatar { width: 30px; }
   .star-count { font-size: 18px; padding: 6px 10px; }
   .guide-face { font-size: 42px; }
-  .streak { top: 70px; }
+  .streak { font-size: 18px; padding: 6px 10px; }
   .boat { --bw: 88px; }
   .bravo-av { width: 96px; margin-top: -64px; }
   .treasure-isle { height: 260px; }

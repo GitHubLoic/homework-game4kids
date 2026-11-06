@@ -896,10 +896,10 @@ function startWorld(w) {
     <header class="topbar">
       <button class="icon-btn" id="btn-map" title="Carte">🗺️</button>
       <div class="track" id="track"></div>
+      <div id="streak"></div>
       <div class="star-count" id="run-stars">⭐ 0</div>
       <button class="icon-btn" id="btn-sound" title="Son"></button>
     </header>
-    <div id="streak"></div>
     <main class="stage away" id="stage"></main>
     <div class="boat" id="boat"><span class="wake"></span>${boatSVG(S.boat)}</div>
   </section>`;
@@ -966,7 +966,7 @@ function updateRunStars() {
 
 function renderStreak() {
   const el = document.getElementById('streak');
-  el.innerHTML = RUN.streak >= 2 ? `<div class="streak">🔥 ${RUN.streak} d’affilée !</div>` : '';
+  el.innerHTML = RUN.streak >= 2 ? `<div class="streak" title="${RUN.streak} étapes d’affilée sans erreur">🔥 ${RUN.streak}</div>` : '';
 }
 
 function confirmQuit() {
