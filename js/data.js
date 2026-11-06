@@ -139,16 +139,17 @@ const BRAVO = ['Bravo {name} !', 'Super !', 'Génial !', 'Trop fort !', 'Waouh !
 
 const OOPS = ['Oups ! Des rochers ! Essaie une autre île 😉', 'Presque ! Regarde bien 👀', 'Pas grave, réessaie !', 'Hmm… pas cette île-là !'];
 
-// --- Répliques du Professeur Bulle ---
+// --- Répliques du professeur ({prof} : son nom, {catch} : sa phrase fétiche) ---
 const PROF = {
-  hello: ['Bonjour{name} ! Je suis le Professeur Bulle. Je t’accompagne pendant tout le voyage !'],
+  hello: ['Bonjour{name} ! Je suis {prof}. Je t’accompagne pendant tout le voyage !'],
   map: ['Choisis une mer{name}, je viens avec toi !', 'Prêt pour l’aventure{name} ? Moi, oui !', 'Quelle mer allons-nous explorer aujourd’hui ?'],
   start: ['C’est parti{name} ! Je suis là si tu as besoin.', 'En avant, moussaillon ! Je te donnerai un coup de tentacule.'],
   cheer: ['Tu vas y arriver, je le sais !', 'Prends ton temps, on n’est pas pressés.', 'Touche 💡 et je te donne un indice !', 'Se tromper, c’est comme ça qu’on apprend !'],
-  bravo: ['Je suis fier de toi !', 'Quel cerveau !', 'Tu es un vrai savant !', 'Bulle-tastique !'],
-  treasure: ['Tu as réussi tout le voyage ! Je suis si fier de toi !'],
+  bravo: ['Continue comme ça !', 'Quel cerveau !', 'Tu es un vrai savant !', '{catch}', '{catch}'],
+  treasure: ['Tu as réussi tout le voyage ! Quelle aventure ! {catch}'],
 };
-const profLine = (key) => pick(PROF[key]).replace('{name}', S.name ? ` ${S.name}` : '');
+const profLine = (key) => pick(PROF[key]).replace('{name}', S.name ? ` ${S.name}` : '')
+  .replace('{prof}', curProf().intro).replace('{catch}', curProf().catch);
 
 // --- Mots du jour : mots-outils à lire tous les jours ---
 // Liste par défaut (modifiable par le parent sur l'écran d'accueil)

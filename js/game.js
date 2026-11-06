@@ -3,7 +3,7 @@
 // ================= Sauvegarde =================
 const STORE_KEY = 'ilesMagiques.v1';
 const DEFAULTS = {
-  name: 'Coleen', level: 'CE1', mode: 'mix', sound: true, voice: true, worlds: {},
+  name: 'Coleen', nameSay: 'Coline', level: 'CE1', mode: 'mix', sound: true, voice: true, prof: 'bulle', profVoices: {}, worlds: {},
   boat: { hull: '#e63946', sail: '#ffffff', pattern: 'rayures' },
   dailyWords: DAILY_WORDS, wordStats: {},
 };
@@ -101,16 +101,48 @@ function speak(text, { queue = false, rate = 0.9 } = {}) {
   if (!canSpeak()) return;
   try {
     if (!queue) speechSynthesis.cancel();
-    const clean = text.replace(/[^\p{L}\p{N}\s.,!?'’:-]/gu, '').trim();
+    let clean = text.replace(/[^\p{L}\p{N}\s.,!?'’:-]/gu, '').trim();
+    if (S.name && S.nameSay) clean = clean.replace(new RegExp(`(^|[^\\p{L}])${S.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}])`, 'giu'), `$1${S.nameSay}`);
     if (!clean) return;
     const u = new SpeechSynthesisUtterance(clean);
     u.lang = 'fr-FR';
-    u.rate = rate;
-    u.pitch = 1.1;
-    const fr = speechSynthesis.getVoices().filter((v) => v.lang && v.lang.toLowerCase().startsWith('fr'));
-    if (fr.length) u.voice = fr.find((v) => /Amélie|Audrey|Marie|Google/i.test(v.name)) || fr[0];
+    const { voice } = curProf();
+    u.rate = rate * voice.rate;
+    u.pitch = voice.pitch;
+    const v = voiceFor(S.prof);
+    if (v) u.voice = v;
     speechSynthesis.speak(u);
   } catch (e) { /* pas de voix disponible */ }
+}
+
+// Voix françaises triées de la plus naturelle à la moins naturelle
+const FUNNY_VOICES = /Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Jacques|Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Wobble|Zarvox|Trinoids|Whisper|Organ|Superstar|Jester|Junior|Ralph|Kathy|Fred/i;
+function voiceScore(v) {
+  let n = 0;
+  if (/natural|neural|premium|online/i.test(v.name)) n += 50;
+  if (/enhanced|amélioré/i.test(v.name)) n += 35;
+  if (/google/i.test(v.name)) n += 30;
+  if (/Audrey|Thomas|Marie|Denise|Henri|Vivienne|Eloise|Céline/i.test(v.name)) n += 15;
+  if (v.lang.toLowerCase() === 'fr-fr') n += 20;
+  if (FUNNY_VOICES.test(v.name)) n -= 60;
+  return n;
+}
+function frenchVoices() {
+  if (!('speechSynthesis' in window)) return [];
+  return speechSynthesis.getVoices()
+    .filter((v) => v.lang && v.lang.toLowerCase().startsWith('fr'))
+    .sort((a, b) => voiceScore(b) - voiceScore(a));
+}
+// Voix d'un professeur : celle choisie par le parent, sinon la première de ses préférences
+function voiceFor(id) {
+  const voices = frenchVoices();
+  const prefer = (PROFS[id] || PROFS.bulle).voice.prefer;
+  const rank = (v) => {
+    const i = prefer.findIndex((name) => v.name.toLowerCase().includes(name.toLowerCase()));
+    return voiceScore(v) + (i < 0 ? 0 : 1000 - i * 100);
+  };
+  return voices.find((v) => v.name === S.profVoices[id])
+    || voices.slice().sort((a, b) => rank(b) - rank(a))[0] || null;
 }
 if ('speechSynthesis' in window) speechSynthesis.getVoices();
 
@@ -917,6 +949,9 @@ function renderHome() {
     ${profSays(esc(profLine('hello')), 'happy')}
     <div class="card setup">
       <label class="field"><span>Ton prénom</span><input id="name" maxlength="14" autocomplete="off" value="${esc(S.name)}"></label>
+      <div class="field"><span>🗣️ Ça se prononce <small>(écris-le comme ça se dit)</small></span>
+        <div class="voice-pick"><input id="name-say" maxlength="20" autocomplete="off" value="${esc(S.nameSay)}" placeholder="${esc(S.name)}"><button class="seg-btn test-name" type="button">▶️ Écouter</button></div>
+      </div>
       <div class="field"><span>Ton bateau</span>
         <div class="boat-maker">
           <div class="boat-preview"><div class="mini-sea"></div>${boatSVG(S.boat)}</div>
@@ -933,12 +968,21 @@ function renderHome() {
         <textarea id="daily" rows="3" spellcheck="false">${esc(dailyWords().join(' '))}</textarea>
       </label>
       <div class="field"><span>Les épreuves</span>${seg('mode', [['mix', '🎲 Les deux'], ['lecture', '📖 Lecture'], ['maths', '🔢 Maths']])}</div>
+      <div class="field"><span>Ton professeur</span>
+        <div class="prof-pick">${Object.entries(PROFS).map(([id, p]) => `<button class="prof-card ${S.prof === id ? 'sel' : ''}" data-id="${id}">
+          <span class="prof-mini">${profSVG('idle', id)}</span><b>${p.name}</b><small>${p.desc}</small></button>`).join('')}</div>
+        <div class="voice-pick"><select id="voice-name" aria-label="Voix du professeur"></select><button class="seg-btn test-voice" type="button">▶️ Écouter</button></div>
+      </div>
       <div class="field"><span>Le son</span>${seg('sound', [[true, '🔔 Bruitages'], [false, '🔕 Sans bruitages']])}${seg('voice', [[true, '🗣️ Voix qui lit les consignes'], [false, '🤫 Sans voix']])}</div>
     </div>
     <button class="btn big pulse go-btn">Larguer les amarres ! ⛵</button>
   </section>`;
 
-  app.querySelector('#name').addEventListener('input', (e) => { S.name = e.target.value.trim(); save(); });
+  app.querySelector('#name').addEventListener('input', (e) => { S.name = e.target.value.trim(); S.nameSay = ''; save();
+    const say = app.querySelector('#name-say'); say.value = ''; say.placeholder = S.name;
+  });
+  app.querySelector('#name-say').addEventListener('input', (e) => { S.nameSay = e.target.value.trim(); save(); });
+  app.querySelector('.test-name').addEventListener('click', () => speak(`Bravo ${S.name} !`));
   app.querySelector('#daily').addEventListener('input', (e) => { S.dailyWords = e.target.value; save(); });
   app.querySelectorAll('.opt-row').forEach((row) => row.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
     S.boat[row.dataset.k] = b.dataset.v; save(); SFX.pop();
@@ -955,6 +999,34 @@ function renderHome() {
     g.querySelectorAll('button').forEach((x) => x.classList.toggle('sel', x === b));
   })));
   app.querySelector('.go-btn').addEventListener('click', () => { SFX.good(); renderMap(); });
+
+  const voiceSel = app.querySelector('#voice-name');
+  const helloProf = () => speak(`Bonjour ${S.name || ''} ! Je suis ${curProf().intro}.`);
+  const fillVoices = () => {
+    const voices = frenchVoices();
+    const cur = voiceFor(S.prof);
+    voiceSel.innerHTML = voices.length
+      ? voices.map((v) => `<option value="${esc(v.name)}" ${v === cur ? 'selected' : ''}>${esc(v.name.replace(/ \(français.*\)$/, ''))}${v.lang.toLowerCase() === 'fr-ca' ? ' 🇨🇦' : ''}</option>`).join('')
+      : '<option>Aucune voix française trouvée</option>';
+  };
+  fillVoices();
+  if ('speechSynthesis' in window) speechSynthesis.addEventListener('voiceschanged', fillVoices);
+  voiceSel.addEventListener('change', () => {
+    S.profVoices[S.prof] = voiceSel.value; save();
+    helloProf();
+  });
+  app.querySelector('.test-voice').addEventListener('click', () => {
+    if (!S.voice) { S.voice = true; save(); renderHome(); }
+    helloProf();
+  });
+  app.querySelectorAll('.prof-card').forEach((c) => c.addEventListener('click', () => {
+    S.prof = c.dataset.id; save(); SFX.pop();
+    app.querySelectorAll('.prof-card').forEach((x) => x.classList.toggle('sel', x === c));
+    profMood(c, 'happy');
+    app.querySelector('.home > .prof-talk').outerHTML = profSays(esc(profLine('hello')), 'happy');
+    fillVoices();
+    helloProf();
+  }));
 }
 
 // ================= Carte des mers =================
