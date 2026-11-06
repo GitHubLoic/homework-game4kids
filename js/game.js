@@ -914,6 +914,7 @@ function renderHome() {
     <div class="home-icons">⛵🏝️🧭</div>
     <h1 class="title">Les Îles<br><span>Magiques</span></h1>
     <p class="subtitle">Navigue d’île en île pour trouver les trésors !</p>
+    ${profSays(esc(profLine('hello')), 'happy')}
     <div class="card setup">
       <label class="field"><span>Ton prénom</span><input id="name" maxlength="14" autocomplete="off" value="${esc(S.name)}"></label>
       <div class="field"><span>Ton bateau</span>
@@ -979,6 +980,7 @@ function renderMap() {
       <div class="word-chips">${dailyWords().map((w) => `<span class="wchip ${wordMastery(w)}">${esc(w)}</span>`).join('')}</div>
       <small><span class="wchip good">bien su</span> <span class="wchip learning">en cours</span> <span class="wchip hard">à revoir</span></small>
     </div>` : ''}
+    ${profSays(esc(profLine('map')))}
     <h2>Choisis ta mer</h2>
     <div class="worlds">${WORLDS.map((w, i) => {
       const prog = S.worlds[w.id] || {};
@@ -996,6 +998,7 @@ function renderMap() {
     const i = Number(c.dataset.i);
     if (!isUnlocked(i)) {
       restart(c, 'shake'); SFX.bad();
+      profMood(app, 'oops');
       speak('Cette mer est encore fermée. Termine la mer d’avant pour l’ouvrir !');
       return;
     }
@@ -1164,7 +1167,7 @@ function enterStep() {
 
   const el = h(`<div class="room">
     <div class="guide">
-      <span class="guide-face">${w.guide}</span>
+      <span class="guide-face prof-face">${profSVG()}</span>
       <div class="bubble">
         <span class="bubble-text"></span>
         <button class="round-btn say" title="Écouter la consigne">🔊</button>
@@ -1185,12 +1188,14 @@ function enterStep() {
   const hintBox = el.querySelector('.hint-box');
   const say = (t) => { bubbleText.textContent = t; restart(bubble, 'bump'); };
   const instr = T.instruction(q);
-  say(instr);
+  say(RUN.index === 0 && !RUN.greeted ? `${profLine('start')} ${instr}` : instr);
+  RUN.greeted = true;
   setTimeout(() => speak(instr), 300);
 
   el.querySelector('.say').addEventListener('click', () => speak(bubbleText.textContent));
   hintBtn.addEventListener('click', () => {
     const hi = T.hint(q);
+    profMood(el, 'think', 4000);
     say(hi.show);
     speak(hi.say || hi.show);
     if (hi.html) { hintBox.innerHTML = hi.html; hintBox.classList.remove('hidden'); restart(hintBox, 'bump'); }
@@ -1205,7 +1210,8 @@ function enterStep() {
       renderStreak();
       SFX.bad();
       boatMood('oops');
-      say(msg || pick(OOPS));
+      profMood(el, 'oops');
+      say(step.mistakes >= 2 && !msg ? profLine('cheer') : msg || pick(OOPS));
       hintBtn.classList.remove('hidden');
     },
     success() {
@@ -1219,6 +1225,7 @@ function enterStep() {
       updateRunStars();
       SFX.good();
       boatMood('happy');
+      profMood(el, 'happy', 0);
       Confetti.burst(innerWidth / 2, innerHeight * 0.45, 90);
       setTimeout(() => showBravo(stars), 700);
     },
@@ -1234,7 +1241,8 @@ function showBravo(stars) {
     <div class="bravo-av">${boatSVG(S.boat, 'happy')}</div>
     <h2 class="bravo-title">${esc(msg)}</h2>
     <div class="bravo-stars">${[0, 1, 2].map((i) => `<span class="bstar ${i < stars ? '' : 'off'}" style="--d:${0.25 + i * 0.28}s">⭐</span>`).join('')}</div>
-    <p class="bravo-sub">${sub}</p>
+    <p class="bravo-sub">${sub} ${esc(profLine('bravo'))}</p>
+    <span class="bravo-prof">${profSVG('happy')}</span>
     ${RUN.streak >= 3 ? `<p class="bravo-streak">🔥 ${RUN.streak} étapes d’affilée sans erreur !</p>` : ''}
     <button class="btn big go pulse next">${isLast ? 'Vers l’île au trésor ! 🏝️' : 'On met les voiles ! ⛵'}</button>
   </div></div>`);
@@ -1290,6 +1298,7 @@ function renderTreasure() {
     </div>
     <div class="treasure-result hidden"></div>
   </div>`);
+  el.querySelector('.tap-msg').insertAdjacentHTML('afterend', profSays('Le trésor est là ! Vas-y, ouvre-le !', 'think', 'treasure-prof'));
   const stage = document.getElementById('stage');
   stage.replaceChildren(el);
   stage.classList.remove('away');
@@ -1304,6 +1313,8 @@ function renderTreasure() {
     chest.classList.remove('idle');
     chest.classList.add('open');
     el.querySelector('.tap-msg').textContent = `Tu as gagné ${w.rewardName} !`;
+    el.querySelector('.treasure-prof .bubble-text').textContent = profLine('treasure');
+    profMood(el, 'happy', 0);
     SFX.win();
     boatMood('happy');
     setTimeout(() => boatMood('happy'), 1300);

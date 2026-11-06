@@ -11,35 +11,35 @@ const STEPS_PER_WORLD = 6;
 
 const WORLDS = [
   {
-    id: 'tropical', name: 'Les Îles Tropicales', emoji: '🏝️', guide: '🦜',
+    id: 'tropical', name: 'Les Îles Tropicales', emoji: '🏝️',
     reward: '🐚', rewardName: 'le coquillage magique',
     c1: '#0077b6', c2: '#48cae4', accent: '#ffd166',
     decor: ['🏝️', '🐠', '🌴', '🐚', '🐬', '🌺'],
     steps: ['La lagune turquoise', 'L’île aux perroquets', 'La plage des tortues', 'La baie des dauphins', 'L’île du volcan', 'Le récif de corail'],
   },
   {
-    id: 'pirates', name: 'La Mer des Pirates', emoji: '🏴‍☠️', guide: '🐙',
+    id: 'pirates', name: 'La Mer des Pirates', emoji: '🏴‍☠️',
     reward: '💰', rewardName: 'le trésor des pirates',
     c1: '#1d3557', c2: '#457b9d', accent: '#ffcb47',
     decor: ['🏴‍☠️', '⚓', '🗺️', '🦜', '💰', '🧭'],
     steps: ['Le port des pirates', 'L’île du crâne', 'La crique des sirènes', 'Le bateau fantôme', 'La tempête', 'L’île au trésor perdu'],
   },
   {
-    id: 'ice', name: 'Les Îles de Glace', emoji: '🧊', guide: '🐧',
+    id: 'ice', name: 'Les Îles de Glace', emoji: '🧊',
     reward: '💎', rewardName: 'le diamant des glaces',
     c1: '#3d7ea6', c2: '#bde0fe', accent: '#ffd166',
     decor: ['🧊', '❄️', '🐧', '⛄', '🐻‍❄️', '🏔️'],
     steps: ['La banquise', 'L’île des pingouins', 'Les icebergs géants', 'La baie des phoques', 'Les aurores boréales', 'Le château de glace'],
   },
   {
-    id: 'candy', name: 'L’Archipel des Bonbons', emoji: '🍭', guide: '🧚',
+    id: 'candy', name: 'L’Archipel des Bonbons', emoji: '🍭',
     reward: '🧁', rewardName: 'le gâteau arc-en-ciel',
     c1: '#c2185b', c2: '#ffb3d9', accent: '#fff176',
     decor: ['🍭', '🍬', '🧁', '🍩', '🍫', '🍓'],
     steps: ['La mer de sirop', 'L’île en biscuit', 'Le lagon de chocolat', 'Les îles sucettes', 'La montagne de glace', 'L’île gâteau'],
   },
   {
-    id: 'stars', name: 'La Mer des Étoiles', emoji: '🌙', guide: '🦉',
+    id: 'stars', name: 'La Mer des Étoiles', emoji: '🌙',
     reward: '🌟', rewardName: 'l’étoile filante',
     c1: '#0b0d2b', c2: '#4a3a9a', accent: '#ffd23f',
     decor: ['🌙', '⭐', '✨', '🌠', '🪐', '🦉'],
@@ -138,6 +138,17 @@ const WORDS = [
 const BRAVO = ['Bravo {name} !', 'Super !', 'Génial !', 'Trop fort !', 'Waouh !', 'Magnifique !', 'Bien joué {name} !', 'Incroyable !'];
 
 const OOPS = ['Oups ! Des rochers ! Essaie une autre île 😉', 'Presque ! Regarde bien 👀', 'Pas grave, réessaie !', 'Hmm… pas cette île-là !'];
+
+// --- Répliques du Professeur Bulle ---
+const PROF = {
+  hello: ['Bonjour{name} ! Je suis le Professeur Bulle. Je t’accompagne pendant tout le voyage !'],
+  map: ['Choisis une mer{name}, je viens avec toi !', 'Prêt pour l’aventure{name} ? Moi, oui !', 'Quelle mer allons-nous explorer aujourd’hui ?'],
+  start: ['C’est parti{name} ! Je suis là si tu as besoin.', 'En avant, moussaillon ! Je te donnerai un coup de tentacule.'],
+  cheer: ['Tu vas y arriver, je le sais !', 'Prends ton temps, on n’est pas pressés.', 'Touche 💡 et je te donne un indice !', 'Se tromper, c’est comme ça qu’on apprend !'],
+  bravo: ['Je suis fier de toi !', 'Quel cerveau !', 'Tu es un vrai savant !', 'Bulle-tastique !'],
+  treasure: ['Tu as réussi tout le voyage ! Je suis si fier de toi !'],
+};
+const profLine = (key) => pick(PROF[key]).replace('{name}', S.name ? ` ${S.name}` : '');
 
 // --- Mots du jour : mots-outils à lire tous les jours ---
 // Liste par défaut (modifiable par le parent sur l'écran d'accueil)
