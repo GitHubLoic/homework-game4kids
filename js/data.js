@@ -172,3 +172,27 @@ const WORD_BANK = {
 
 // Mots qui se prononcent pareil : jamais proposés ensemble quand on écoute le mot
 const HOMOPHONES = [['se', 'ce', 'ses', 'ces'], ['et', 'est'], ['à', 'a'], ['son', 'sont'], ['au', 'eau', 'aux'], ['du', 'dû'], ['il', 'ils'], ['elle', 'elles'], ['en', 'an']];
+
+// --- Singulier / pluriel (CE1) ---
+// g : genre (pour un/une, le/la) ; pl : pluriel (avec les pluriels en -x) ; bad : pluriel « piège » mal écrit
+const NOUNS = [
+  { sg: 'pomme', pl: 'pommes', g: 'f', e: '🍎' },
+  { sg: 'ballon', pl: 'ballons', g: 'm', e: '⚽' },
+  { sg: 'fleur', pl: 'fleurs', g: 'f', e: '🌸' },
+  { sg: 'étoile', pl: 'étoiles', g: 'f', e: '⭐' },
+  { sg: 'voiture', pl: 'voitures', g: 'f', e: '🚗' },
+  { sg: 'livre', pl: 'livres', g: 'm', e: '📖' },
+  { sg: 'poisson', pl: 'poissons', g: 'm', e: '🐟' },
+  { sg: 'papillon', pl: 'papillons', g: 'm', e: '🦋' },
+  { sg: 'maison', pl: 'maisons', g: 'f', e: '🏠' },
+  { sg: 'banane', pl: 'bananes', g: 'f', e: '🍌' },
+  { sg: 'crayon', pl: 'crayons', g: 'm', e: '✏️' },
+  { sg: 'chien', pl: 'chiens', g: 'm', e: '🐶' },
+  { sg: 'tortue', pl: 'tortues', g: 'f', e: '🐢' },
+  { sg: 'bateau', pl: 'bateaux', bad: 'bateaus', g: 'm', e: '⛵' },
+  { sg: 'gâteau', pl: 'gâteaux', bad: 'gâteaus', g: 'm', e: '🍰' },
+  { sg: 'chapeau', pl: 'chapeaux', bad: 'chapeaus', g: 'm', e: '🎩' },
+  { sg: 'cadeau', pl: 'cadeaux', bad: 'cadeaus', g: 'm', e: '🎁' },
+  { sg: 'oiseau', pl: 'oiseaux', bad: 'oiseaus', g: 'm', e: '🐦' },
+  { sg: 'souris', pl: 'souris', g: 'f', e: '🐭' },
+];

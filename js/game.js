@@ -284,16 +284,24 @@ function boatMood(mood) {
 }
 
 // Îles cliquables : une seule est la bonne
-function buildIslands(container, items, api, onWin) {
+function islandsRow(count) {
   const land = LANDS[RUN.zone.land];
-  const row = h(`<div class="islands n${items.length}" style="--g1:${land.g1};--g2:${land.g2};--top:${land.top}"></div>`);
+  return h(`<div class="islands n${count}" style="--g1:${land.g1};--g2:${land.g2};--top:${land.top}"></div>`);
+}
+
+function islandEl(html, i) {
+  return h(`<button class="island" style="--i:${i}" aria-label="Île ${i + 1}">
+    <span class="isle-sign"><span class="isle-card">${html}</span><span class="isle-post"></span></span>
+    <span class="isle-land"><span class="isle-top l">${pick(RUN.zone.tops)}</span><span class="isle-top r">${pick(RUN.zone.tops)}</span></span>
+  </button>`);
+}
+
+function buildIslands(container, items, api, onWin) {
+  const row = islandsRow(items.length);
   let done = false;
   let busy = false;
   items.forEach((it, i) => {
-    const isle = h(`<button class="island" style="--i:${i}" aria-label="Île ${i + 1}">
-      <span class="isle-sign"><span class="isle-card">${it.html}</span><span class="isle-post"></span></span>
-      <span class="isle-land"><span class="isle-top l">${pick(RUN.zone.tops)}</span><span class="isle-top r">${pick(RUN.zone.tops)}</span></span>
-    </button>`);
+    const isle = islandEl(it.html, i);
     isle.addEventListener('click', async () => {
       if (done || busy || isle.classList.contains('rocky')) return;
       busy = true;
@@ -320,6 +328,53 @@ function buildIslands(container, items, api, onWin) {
     row.append(isle);
   });
   container.append(row);
+}
+
+// ================= Singulier / pluriel =================
+// Un groupe découpé en morceaux : { t: texte, clue: indice ?, glue: collé au morceau précédent }
+const SG_DETS = { m: ['un', 'le'], f: ['une', 'la'] };
+const PL_DETS = ['des', 'les', 'des', 'les', 'deux', 'trois'];
+
+function pluralPieces(word) {
+  const end = word.endsWith('x') ? 'x' : 's';
+  return [{ t: word.slice(0, -1) }, { t: end, clue: true, glue: true, kind: 'fin' }];
+}
+
+function makeGroup(plural, withVerb) {
+  // un nom (« une banane », « des vaches »)
+  if (!withVerb) {
+    if (Math.random() < 0.6) {
+      const n = pick(NOUNS.filter((x) => x.sg !== x.pl));
+      return plural
+        ? { plural, pieces: [{ t: pick(PL_DETS), clue: true, kind: 'det' }, ...pluralPieces(n.pl)] }
+        : { plural, pieces: [{ t: pick(SG_DETS[n.g]), clue: true, kind: 'det' }, { t: n.sg }] };
+    }
+    const s = pick(SUBJECTS.filter((x) => !x.sg.includes('’') && !x.sg.endsWith(x.pl)));
+    const [det, noun] = s.sg.split(' ');
+    return plural
+      ? { plural, pieces: [{ t: pick(PL_DETS), clue: true, kind: 'det' }, ...pluralPieces(s.pl)] }
+      : { plural, pieces: [{ t: det, clue: true, kind: 'det' }, { t: noun }] };
+  }
+  // une petite phrase avec un verbe en -er (« Les lapins mangent une carotte. »)
+  const s = pick(SUBJECTS.filter((x) => !x.sg.includes('’') && !x.sg.endsWith(x.pl)));
+  const a = pick(ACTIONS.filter((x) => x.pl.split(' ')[0] === `${x.sg.split(' ')[0]}nt`));
+  const [det, noun] = s.sg.split(' ');
+  const verb = a.sg.split(' ')[0];
+  const rest = { t: `${a.sg.slice(verb.length + 1)}.` };
+  return plural
+    ? { plural, pieces: [{ t: cap(pick(['les', 'les', 'deux', 'trois'])), clue: true, kind: 'det' }, ...pluralPieces(s.pl), { t: verb }, { t: 'nt', clue: true, glue: true, kind: 'verbe' }, rest] }
+    : { plural, pieces: [{ t: cap(det), clue: true, kind: 'det' }, { t: noun }, { t: verb }, rest] };
+}
+
+const groupText = (g) => g.pieces.reduce((acc, p, i) => acc + (i && !p.glue ? ' ' : '') + p.t, '');
+
+// La petite règle qui résume les indices trouvés
+function clueRule(g) {
+  const det = g.pieces.find((p) => p.kind === 'det').t.toLowerCase();
+  if (!g.plural) return `« ${det} » → il n’y en a qu’un. Et pas de s à la fin${g.pieces.length > 2 ? ', ni de « nt » au verbe' : ''} !`;
+  const fin = g.pieces.find((p) => p.kind === 'fin').t;
+  const verbe = g.pieces.some((p) => p.kind === 'verbe');
+  return `Les indices du pluriel : « ${det} » + le « ${fin} » à la fin${verbe ? ' + « nt » au verbe' : ''} !`;
 }
 
 // ================= Types d'étapes =================
@@ -393,6 +448,113 @@ const ROOM_TYPES = {
         pool.append(b);
       });
       body.append(slots, pool);
+    },
+  },
+
+  // 📖 CE1 : singulier ou pluriel ? puis trouver les indices qui le montrent
+  indices: {
+    subject: 'lecture',
+    make() {
+      const plurals = shuffle([true, false, Math.random() < 0.6]);
+      return { phase: 'choix', items: plurals.map((p, i) => makeGroup(p, i === 2 && Math.random() < 0.6)) };
+    },
+    instruction: () => 'Singulier ou pluriel ? Lis bien, puis choisis l’île !',
+    hint: (q) => (q.phase === 'choix'
+      ? { show: 'Regarde le petit mot devant et la fin des mots 👀', say: 'Regarde le petit mot devant, et la fin des mots.' }
+      : { show: 'Les indices : le petit mot devant (le, la, un, les, des…) et les lettres à la fin (s, x, nt).', say: 'Les indices, ce sont le petit mot devant, et les lettres à la fin : s, x, ou n t.' }),
+    render(body, q, api) {
+      let idx = 0;
+      let busy = false;
+      const card = h('<div class="clue-card"><span class="tri-count"></span><div class="sentence clue-text"></div><div class="clue-rule hidden"></div></div>');
+      const text = card.querySelector('.clue-text');
+      const count = card.querySelector('.tri-count');
+      const rule = card.querySelector('.clue-rule');
+      const row = islandsRow(2);
+      const isles = [false, true].map((plural, i) => {
+        const isle = islandEl(`<div class="tri-label">
+          <span class="tri-pic">${plural ? '🐟🐟🐟' : '🐟'}</span>
+          <b>${plural ? 'Pluriel' : 'Singulier'}</b>
+          <small>${plural ? 'plusieurs' : 'un seul'}</small>
+        </div>`, i);
+        isle.classList.add('tri-isle');
+        isle.addEventListener('click', () => choose(plural, isle));
+        row.append(isle);
+        return isle;
+      });
+
+      function showItem() {
+        const g = q.items[idx];
+        q.phase = 'choix';
+        busy = false;
+        count.textContent = `${idx + 1} / ${q.items.length}`;
+        text.textContent = groupText(g);
+        text.classList.remove('pieces');
+        rule.classList.add('hidden');
+        row.classList.remove('faded');
+        isles.forEach((isl) => isl.classList.remove('chosen-ok'));
+        restart(text, 'tri-in');
+        if (idx > 0) { api.say('Singulier ou pluriel ? Lis bien, puis choisis l’île !'); }
+      }
+
+      function choose(plural, isle) {
+        if (busy || q.phase !== 'choix') return;
+        const g = q.items[idx];
+        if (g.plural !== plural) {
+          restart(isle, 'shake');
+          api.fail(plural ? 'Non, il n’y en a qu’un seul ! Regarde bien 👀' : 'Non, il y en a plusieurs ! Regarde bien 👀');
+          return;
+        }
+        SFX.pop();
+        isle.classList.add('chosen-ok');
+        row.classList.add('faded');
+        startClues(g);
+      }
+
+      // 2e temps : toucher les indices dans les mots
+      function startClues(g) {
+        q.phase = 'indices';
+        const total = g.pieces.filter((p) => p.clue).length;
+        let found = 0;
+        text.classList.add('pieces');
+        text.innerHTML = '';
+        g.pieces.forEach((p, i) => {
+          const b = h(`<button class="piece ${p.glue ? 'glue' : ''}">${esc(p.t)}</button>`);
+          if (i && !p.glue) text.append(document.createTextNode(' '));
+          b.addEventListener('click', async () => {
+            if (busy || b.classList.contains('found')) return;
+            if (!p.clue) {
+              restart(b, 'shake');
+              api.fail('Ce morceau-là ne change pas entre un et plusieurs. Cherche ailleurs !');
+              return;
+            }
+            b.classList.add('found', `k-${p.kind}`);
+            SFX.unlock();
+            found++;
+            if (found < total) {
+              api.say(`Oui ! Encore ${total - found} indice${total - found > 1 ? 's' : ''} à trouver 🔍`);
+              return;
+            }
+            busy = true;
+            rule.textContent = `✨ ${clueRule(g)}`;
+            rule.classList.remove('hidden');
+            restart(rule, 'tri-in');
+            speak(clueRule(g).replace(/«|»/g, ''));
+            await sleep(2600);
+            idx++;
+            if (idx >= q.items.length) api.success();
+            else showItem();
+          });
+          text.append(b);
+        });
+        const msg = g.plural
+          ? `Oui, c’est le pluriel ! Qu’est-ce qui te le dit ? Touche les ${total} indices.`
+          : 'Oui, c’est le singulier ! Qu’est-ce qui te le dit ? Touche l’indice.';
+        api.say(msg);
+        speak(msg);
+      }
+
+      body.append(card, row);
+      showItem();
     },
   },
 
@@ -720,8 +882,10 @@ function drawer(types) {
   };
 }
 
+const PLURAL_TYPES = ['indices'];
+
 function buildSequence(mode, count) {
-  const r = drawer(READING_TYPES);
+  const r = drawer(S.level === 'CE1' ? READING_TYPES.concat(PLURAL_TYPES) : READING_TYPES);
   const m = drawer(MATHS_TYPES);
   const seq = Array.from({ length: count }, (_, i) => {
     if (mode === 'lecture') return r();
@@ -733,6 +897,11 @@ function buildSequence(mode, count) {
   if (mode === 'maths') seq[2] = pick(DAILY_TYPES);
   else if (mode === 'lecture') { seq[0] = 'ecouteMot'; seq[2] = 'phraseTrou'; seq[4] = pick(DAILY_TYPES); }
   else { seq[0] = 'ecouteMot'; seq[4] = 'phraseTrou'; }
+  // CE1 : le singulier / pluriel revient souvent
+  if (S.level === 'CE1' && mode !== 'maths') {
+    if (mode === 'lecture') seq[1] = pick(PLURAL_TYPES);
+    else if (!PLURAL_TYPES.includes(seq[2]) && Math.random() < 0.6) seq[2] = pick(PLURAL_TYPES);
+  }
   return seq;
 }
 

@@ -684,3 +684,39 @@ button { font-family: inherit; color: inherit; }
 .words-board small .wchip.good::after { content: ''; }
 .wchip.learning { background: #fff1c2; color: #8a6400; }
 .wchip.hard { background: #ffd6d6; color: #b42323; }
+
+/* ---------- singulier / pluriel ---------- */
+.tri-count {
+  background: rgba(10, 30, 60, .45); color: #fff; font-weight: 700; font-size: 16px;
+  padding: 3px 12px; border-radius: 999px;
+}
+.tri-in { animation: triIn .45s cubic-bezier(.3, 1.5, .5, 1); }
+@keyframes triIn { from { transform: translateY(-30px) scale(.6) rotate(-6deg); opacity: 0; } }
+.islands .tri-isle { --cw: clamp(150px, 26vw, 230px); }
+.tri-label { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.tri-label b { font-size: calc(var(--cw) * .14); }
+.tri-label small { font-size: calc(var(--cw) * .085); color: #4a6b8a; font-weight: 600; }
+.tri-pic { font-size: calc(var(--cw) * .14); letter-spacing: -2px; }
+.isle-card.bump { animation: pop .35s; }
+
+.clue-card { display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 100%; }
+.clue-text { min-width: 6em; }
+.clue-text.pieces { padding: 12px 18px; line-height: 1.6; }
+.piece {
+  font: inherit; color: inherit; cursor: pointer; padding: 0 .12em; margin: 0 .04em;
+  border: none; border-radius: 12px; background: #eef4fb;
+  box-shadow: inset 0 -4px 0 #cfe0f2; transition: background .2s, box-shadow .2s;
+}
+.piece.glue { margin-left: .1em; }
+.piece:hover { background: #e2eefb; }
+.piece.found { animation: pop .4s; color: #fff; box-shadow: 0 4px 0 rgba(0, 0, 0, .2); }
+.piece.k-det { background: #3a86ff; }
+.piece.k-fin { background: #ff7b1c; }
+.piece.k-verbe { background: #1f9d55; }
+.clue-rule {
+  background: #fff6cf; border: 3px solid #ffd23f; border-radius: 18px; padding: 10px 18px;
+  font-size: clamp(18px, 2.6vw, 24px); font-weight: 700; text-align: center; max-width: 640px;
+}
+.islands.faded .island:not(.chosen-ok) { opacity: .35; filter: grayscale(.6); }
+.islands.faded .island { pointer-events: none; }
+.island.chosen-ok .isle-card { box-shadow: 0 5px 0 rgba(0, 0, 0, .25), 0 0 0 4px #ffd23f, 0 0 30px 10px rgba(255, 230, 120, .8); }
