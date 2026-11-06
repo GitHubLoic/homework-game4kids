@@ -351,7 +351,7 @@ function buildIslands(container, items, api, onWin) {
         await sailToIsland(isle, 0.55);
         restart(boatEl(), 'bonk');
         isle.classList.add('rocky');
-        api.fail();
+        api.fail(undefined, it.value);
         await sleep(450);
         await sailHome();
         busy = false;
@@ -372,20 +372,23 @@ function pluralPieces(word) {
   return [{ t: word.slice(0, -1) }, { t: end, clue: true, glue: true, kind: 'fin' }];
 }
 
-function makeGroup(plural, withVerb) {
+// Les deux formes d'un même groupe : { sg: morceaux au singulier, pl: morceaux au pluriel }
+function makePair(withVerb) {
   // un nom (« une banane », « des vaches »)
   if (!withVerb) {
     if (Math.random() < 0.6) {
       const n = pick(NOUNS.filter((x) => x.sg !== x.pl));
-      return plural
-        ? { plural, pieces: [{ t: pick(PL_DETS), clue: true, kind: 'det' }, ...pluralPieces(n.pl)] }
-        : { plural, pieces: [{ t: pick(SG_DETS[n.g]), clue: true, kind: 'det' }, { t: n.sg }] };
+      return {
+        sg: [{ t: pick(SG_DETS[n.g]), clue: true, kind: 'det' }, { t: n.sg }],
+        pl: [{ t: pick(PL_DETS), clue: true, kind: 'det' }, ...pluralPieces(n.pl)],
+      };
     }
     const s = pick(SUBJECTS.filter((x) => !x.sg.includes('’') && !x.sg.endsWith(x.pl)));
     const [det, noun] = s.sg.split(' ');
-    return plural
-      ? { plural, pieces: [{ t: pick(PL_DETS), clue: true, kind: 'det' }, ...pluralPieces(s.pl)] }
-      : { plural, pieces: [{ t: det, clue: true, kind: 'det' }, { t: noun }] };
+    return {
+      sg: [{ t: det, clue: true, kind: 'det' }, { t: noun }],
+      pl: [{ t: pick(PL_DETS), clue: true, kind: 'det' }, ...pluralPieces(s.pl)],
+    };
   }
   // une petite phrase avec un verbe en -er (« Les lapins mangent une carotte. »)
   const s = pick(SUBJECTS.filter((x) => !x.sg.includes('’') && !x.sg.endsWith(x.pl)));
@@ -393,9 +396,15 @@ function makeGroup(plural, withVerb) {
   const [det, noun] = s.sg.split(' ');
   const verb = a.sg.split(' ')[0];
   const rest = { t: `${a.sg.slice(verb.length + 1)}.` };
-  return plural
-    ? { plural, pieces: [{ t: cap(pick(['les', 'les', 'deux', 'trois'])), clue: true, kind: 'det' }, ...pluralPieces(s.pl), { t: verb }, { t: 'nt', clue: true, glue: true, kind: 'verbe' }, rest] }
-    : { plural, pieces: [{ t: cap(det), clue: true, kind: 'det' }, { t: noun }, { t: verb }, rest] };
+  return {
+    sg: [{ t: cap(det), clue: true, kind: 'det' }, { t: noun }, { t: verb }, rest],
+    pl: [{ t: cap(pick(['les', 'les', 'deux', 'trois'])), clue: true, kind: 'det' }, ...pluralPieces(s.pl), { t: verb }, { t: 'nt', clue: true, glue: true, kind: 'verbe' }, rest],
+  };
+}
+
+function makeGroup(plural, withVerb) {
+  const pair = makePair(withVerb);
+  return { plural, pieces: plural ? pair.pl : pair.sg, other: plural ? pair.sg : pair.pl };
 }
 
 const groupText = (g) => g.pieces.reduce((acc, p, i) => acc + (i && !p.glue ? ' ' : '') + p.t, '');
@@ -409,6 +418,57 @@ function clueRule(g) {
   return `Les indices du pluriel : « ${det} » + le « ${fin} » à la fin${verbe ? ' + « nt » au verbe' : ''} !`;
 }
 
+// ================= Explications après une erreur =================
+const digits = (n) => ({ d: Math.floor(n / 10), u: n % 10 });
+const digitsHTML = (n) => { const { d, u } = digits(n); return `${d ? `<b class="ex-d">${d}</b>` : ''}<b class="ex-u">${u}</b>`; };
+
+// Un nombre : ses chiffres en couleur, ses blocs, et « D dizaines et U unités »
+function numberCardHTML(n, label) {
+  const { d, u } = digits(n);
+  return `<div class="ex-num"><small>${label}</small><div class="ex-digits">${digitsHTML(n)}</div>
+    <div class="ex-blocks">${blocksHTML(n)}</div>
+    <span><b class="ex-d">${plural(d, 'dizaine')}</b> et <b class="ex-u">${plural(u, 'unité')}</b></span></div>`;
+}
+
+// Comparer le bon nombre et celui choisi (dizaines / unités)
+function explainNumber(n, wrong) {
+  const N = digits(n);
+  const W = digits(wrong);
+  const swapped = W.d === N.u && W.u === N.d;
+  const where = `Le chiffre de gauche, ce sont les dizaines : ${plural(N.d, 'barre')} de dix. Le chiffre de droite, ce sont les unités : ${plural(N.u, 'cube')}.`;
+  return {
+    show: swapped ? 'Attention, tu as inversé les dizaines et les unités ! 🔄' : `${n}, c’est ${duText(n)} 👇`,
+    html: `<div class="ex-pair">${numberCardHTML(n, 'Le bon nombre ✅')}${numberCardHTML(wrong, 'Ton choix ❌')}</div>
+      <p class="ex-note">${where}</p>`,
+    say: `${swapped ? 'Attention, tu as inversé les dizaines et les unités. ' : ''}${n}, c'est ${duText(n)}. ${where} Toi, tu as choisi ${wrong}, c'est ${duText(wrong)}.`,
+  };
+}
+
+// Mettre en couleur les lettres qui changent entre deux mots
+function diffParts(a, b) {
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  let j = 0;
+  while (j < a.length - i && j < b.length - i && a[a.length - 1 - j] === b[b.length - 1 - j]) j++;
+  return [a.slice(0, i), a.slice(i, a.length - j), a.slice(a.length - j)];
+}
+const markDiff = (a, b, cls) => { const [p, m, e] = diffParts(a, b); return `${esc(p)}${m ? `<mark class="${cls}">${esc(m)}</mark>` : ''}${esc(e)}`; };
+
+function explainWord(right, wrong, fmt = (w) => w) {
+  return {
+    show: 'Les deux mots se ressemblent… regarde les lettres en couleur 👀',
+    html: `<div class="ex-pair">
+      <div class="ex-word"><small>Ton choix ❌</small><span>${markDiff(fmt(wrong), fmt(right), 'bad')}</span></div>
+      <div class="ex-word"><small>Le bon mot ✅</small><span>${markDiff(fmt(right), fmt(wrong), 'good')}</span></div>
+    </div>`,
+    say: `Tu as choisi ${wrong}. Le bon mot, c'est ${right}. Les deux se ressemblent, mais regarde bien les lettres en couleur : elles changent tout !`,
+  };
+}
+
+// Une phrase en morceaux, avec les indices singulier / pluriel en couleur
+const piecesHTML = (pieces) => pieces.reduce((acc, p, i) => acc + (i && !p.glue ? ' ' : '')
+  + (p.clue ? `<mark class="k-${p.kind}">${esc(p.t)}</mark>` : esc(p.t)), '');
+
 // ================= Types d'étapes =================
 const ROOM_TYPES = {
   // 📖 Lire une phrase et trouver l'île qui l'illustre
@@ -417,9 +477,34 @@ const ROOM_TYPES = {
     make: (level) => makeSentence(level),
     instruction: () => 'Lis la phrase, puis navigue vers l’île qui montre la même chose !',
     hint: (q) => ({ show: 'Écoute bien la phrase 👂', say: q.text }),
+    explain(q, o) {
+      const { s: who, a, n } = q.correct;
+      const subj = (x, k) => (k === 1 ? x.sg : `${NUM_WORDS[k]} ${x.pl}`);
+      const count = (k) => (k === 1 ? 'un seul' : NUM_WORDS[k]);
+      let part; let say;
+      if (o.s !== who) {
+        part = 's';
+        say = `La phrase parle de ${subj(who, n)}. Sur ton île, c'est ${subj(o.s, n)}.`;
+      } else if (o.a !== a) {
+        part = 'a';
+        say = `La phrase dit : ${n === 1 ? a.sg : a.pl}. Sur ton île, ce n'est pas ça !`;
+      } else {
+        part = 'n';
+        say = `Dans la phrase, il y en a ${count(n)}. Sur ton île, il y en a ${count(o.n)}.`;
+      }
+      const [, art, noun] = who.sg.match(/^(l’|le |la )(.*)$/);
+      const words = n === 1 ? { n: cap(art.trim()), s: noun, a: a.sg } : { n: cap(NUM_WORDS[n]), s: who.pl, a: a.pl };
+      const mk = (k) => (k === part ? `<mark class="good">${words[k]}</mark>` : words[k]);
+      return {
+        show: 'Relis bien le morceau en couleur 👇',
+        html: `<div class="sentence ex-sentence">${mk('n')}${words.n.endsWith('’') ? '' : ' '}${mk('s')} ${mk('a')}.</div>
+          <div class="ex-pair"><div class="ex-word"><small>La phrase ✅</small>${sceneHTML(q.correct)}</div><div class="ex-word"><small>Ton île ❌</small>${sceneHTML(o)}</div></div>`,
+        say,
+      };
+    },
     render(body, q, api) {
       body.append(h(`<div class="sentence">${q.text}</div>`));
-      const items = shuffle([{ ...q.correct, ok: true }, ...q.distractors]).map((o) => ({ correct: !!o.ok, html: sceneHTML(o) }));
+      const items = shuffle([{ ...q.correct, ok: true }, ...q.distractors]).map((o) => ({ correct: !!o.ok, html: sceneHTML(o), value: o }));
       buildIslands(body, items, api);
     },
   },
@@ -433,9 +518,10 @@ const ROOM_TYPES = {
     },
     instruction: () => 'Regarde l’image. Sur quelle île est écrit le bon mot ?',
     hint: (q) => ({ show: 'Écoute le mot 👂', say: q.answer }),
+    explain: (q, w) => explainWord(q.answer, w),
     render(body, q, api) {
       body.append(h(`<div class="big-emoji">${q.e}</div>`));
-      buildIslands(body, q.options.map((o) => ({ correct: o === q.answer, html: `<div class="word" style="--len:${o.length}">${o}</div>` })), api);
+      buildIslands(body, q.options.map((o) => ({ correct: o === q.answer, value: o, html: `<div class="word" style="--len:${o.length}">${o}</div>` })), api);
     },
   },
 
@@ -449,6 +535,18 @@ const ROOM_TYPES = {
     },
     instruction: () => 'Repêche les mots dans l’ordre pour écrire la phrase de l’image !',
     hint: (q) => ({ show: 'Écoute la phrase 👂 Le premier mot a une majuscule !', say: q.text }),
+    explain(q, { w, pos }) {
+      const next = q.words[pos];
+      const rule = pos === 0
+        ? `Une phrase commence toujours par une majuscule. Le premier mot, c'est ${next}.`
+        : `Après ${q.words[pos - 1].replace('.', '')}, le mot qui suit, c'est ${next.replace('.', '')}.${next.endsWith('.') ? ' Il a le point : c’est la fin de la phrase !' : ''}`;
+      return {
+        show: 'Regarde quel mot vient ensuite 👇',
+        html: `<div class="sentence ex-sentence">${q.words.slice(0, pos).map(esc).join(' ')} <mark class="good">${esc(next)}</mark> <span class="ex-rest">…</span></div>
+          <p class="ex-note">« ${esc(w)} » vient plus tard dans la phrase.</p>`,
+        say: `${rule} Le mot ${w.replace('.', '')} vient plus tard.`,
+      };
+    },
     render(body, q, api) {
       body.append(h(sceneHTML(q.correct, 'big')));
       const slots = h(`<div class="slots">${q.words.map(() => '<span class="slot"></span>').join('')}</div>`);
@@ -474,7 +572,7 @@ const ROOM_TYPES = {
             }
           } else {
             restart(b, 'shake');
-            api.fail();
+            api.fail(undefined, { w, pos });
           }
         });
         pool.append(b);
@@ -494,6 +592,30 @@ const ROOM_TYPES = {
     hint: (q) => (q.phase === 'choix'
       ? { show: 'Regarde le petit mot devant et la fin des mots 👀', say: 'Regarde le petit mot devant, et la fin des mots.' }
       : { show: 'Les indices : le petit mot devant (le, la, un, les, des…) et les lettres à la fin (s, x, nt).', say: 'Les indices, ce sont le petit mot devant, et les lettres à la fin : s, x, ou n t.' }),
+    explain(q, { g, piece }) {
+      const sg = g.plural ? g.other : g.pieces;
+      const pl = g.plural ? g.pieces : g.other;
+      const det = g.pieces.find((p) => p.kind === 'det').t.toLowerCase();
+      const fin = pl.find((p) => p.kind === 'fin').t;
+      const verbe = pl.some((p) => p.kind === 'verbe');
+      const ends = `Au pluriel, le nom prend un ${fin} à la fin${verbe ? ', et le verbe prend n t' : ''}.`;
+      const say = piece
+        ? `${piece.t}, c'est pareil au singulier et au pluriel : ce n'est pas un indice. Les indices, ce sont les morceaux qui changent. ${ends}`
+        : `${det}, c'est un petit mot du ${g.plural ? 'pluriel : il y en a plusieurs' : 'singulier : il n’y en a qu’un'}. ${ends}`;
+      return {
+        show: piece ? 'Les indices, ce sont les morceaux qui changent 👇' : `« ${det} » → ${g.plural ? 'pluriel, il y en a plusieurs' : 'singulier, il n’y en a qu’un'} 👇`,
+        html: `<div class="ex-compare">
+            <div class="ex-form ${g.plural ? '' : 'cur'}"><small>🐟 un seul = <b>singulier</b></small><p>${piecesHTML(sg)}</p></div>
+            <div class="ex-form ${g.plural ? 'cur' : ''}"><small>🐟🐟🐟 plusieurs = <b>pluriel</b></small><p>${piecesHTML(pl)}</p></div>
+          </div>
+          <div class="ex-dets">
+            <div><b>Singulier</b><span>le · la · l’ · un · une · mon · ton · son · ma · ta · sa</span></div>
+            <div><b>Pluriel</b><span>les · des · mes · tes · ses · deux · trois</span></div>
+          </div>
+          <p class="ex-note">${ends.replace('n t', '« nt »')}</p>`,
+        say,
+      };
+    },
     render(body, q, api) {
       let idx = 0;
       let busy = false;
@@ -524,6 +646,7 @@ const ROOM_TYPES = {
         rule.classList.add('hidden');
         row.classList.remove('faded');
         isles.forEach((isl) => isl.classList.remove('chosen-ok'));
+        api.clearWhy();
         restart(text, 'tri-in');
         if (idx > 0) { api.say('Singulier ou pluriel ? Lis bien, puis choisis l’île !'); }
       }
@@ -533,7 +656,7 @@ const ROOM_TYPES = {
         const g = q.items[idx];
         if (g.plural !== plural) {
           restart(isle, 'shake');
-          api.fail(plural ? 'Non, il n’y en a qu’un seul ! Regarde bien 👀' : 'Non, il y en a plusieurs ! Regarde bien 👀');
+          api.fail(plural ? 'Non, il n’y en a qu’un seul ! Regarde bien 👀' : 'Non, il y en a plusieurs ! Regarde bien 👀', { g });
           return;
         }
         SFX.pop();
@@ -556,7 +679,7 @@ const ROOM_TYPES = {
             if (busy || b.classList.contains('found')) return;
             if (!p.clue) {
               restart(b, 'shake');
-              api.fail('Ce morceau-là ne change pas entre un et plusieurs. Cherche ailleurs !');
+              api.fail('Ce morceau-là ne change pas entre un et plusieurs. Cherche ailleurs !', { g, piece: p });
               return;
             }
             b.classList.add('found', `k-${p.kind}`);
@@ -599,9 +722,10 @@ const ROOM_TYPES = {
     },
     instruction: (q) => `Quelle île montre le nombre ${q.n} ?`,
     hint: (q) => ({ show: `Une barre = 10, un cube = 1. ${q.n} c’est ${duText(q.n)}.`, say: `Une barre vaut dix, un cube vaut un. ${q.n}, c'est ${duText(q.n)}.` }),
+    explain: (q, w) => explainNumber(q.n, w),
     render(body, q, api) {
       body.append(h(`<div class="big-number">${q.n}</div>`));
-      buildIslands(body, q.options.map((o) => ({ correct: o === q.n, html: blocksHTML(o) })), api);
+      buildIslands(body, q.options.map((o) => ({ correct: o === q.n, value: o, html: blocksHTML(o) })), api);
     },
   },
 
@@ -614,11 +738,12 @@ const ROOM_TYPES = {
     },
     instruction: (q) => q.asText ? 'Lis bien, puis navigue vers le bon nombre !' : 'Compte les barres de dix et les cubes. Quelle île a le bon nombre ?',
     hint: () => ({ show: 'Les dizaines s’écrivent à gauche, les unités à droite ✋', say: 'Compte d’abord les dizaines, elles s’écrivent à gauche. Puis les unités, à droite.' }),
+    explain: (q, w) => explainNumber(q.n, w),
     render(body, q, api) {
       body.append(q.asText
         ? h(`<div class="sentence">${duText(q.n)}</div>`)
         : h(`<div class="blocks-card">${blocksHTML(q.n, 'large')}</div>`));
-      buildIslands(body, q.options.map((o) => ({ correct: o === q.n, html: `<div class="isle-number">${o}</div>` })), api);
+      buildIslands(body, q.options.map((o) => ({ correct: o === q.n, value: o, html: `<div class="isle-number">${o}</div>` })), api);
     },
   },
 
@@ -628,6 +753,15 @@ const ROOM_TYPES = {
     make: (level) => ({ n: level === 'CE1' ? rand(21, 99) : rand(11, 49) }),
     instruction: (q) => `Charge exactement ${q.n} cubes dans la cale, puis lève l’ancre !`,
     hint: (q) => ({ show: `${q.n} = ${duText(q.n)}`, say: `${q.n}, c'est ${duText(q.n)}.` }),
+    explain(q, { d, u }) {
+      const N = digits(q.n);
+      return {
+        show: `Pour ${q.n} : ${plural(N.d, 'barre')} de 10 et ${plural(N.u, 'cube')} 👇`,
+        html: `<div class="ex-pair">${numberCardHTML(q.n, 'Il faut ✅')}${numberCardHTML(d * 10 + u, 'Dans ta cale ❌')}</div>
+          <p class="ex-note">Le chiffre de gauche dit combien de <b class="ex-d">barres de 10</b>, celui de droite combien de <b class="ex-u">cubes</b>.</p>`,
+        say: `Pour ${q.n}, il faut ${plural(N.d, 'barre')} de dix et ${plural(N.u, 'cube')}. Dans ta cale, il y a ${plural(d, 'barre')} et ${plural(u, 'cube')}, ça fait ${d * 10 + u}.`,
+      };
+    },
     render(body, q, api) {
       let d = 0;
       let u = 0;
@@ -690,7 +824,7 @@ const ROOM_TYPES = {
           setTimeout(() => api.success(), 500);
         } else {
           restart(box, 'shake');
-          api.fail(`Tu as chargé ${got}. Il en faut ${q.n} ! ${got < q.n ? 'Ajoute' : 'Enlève'} des cubes.`);
+          api.fail(`Tu as chargé ${got}. Il en faut ${q.n} ! ${got < q.n ? 'Ajoute' : 'Enlève'} des cubes.`, { d, u });
         }
       });
       body.append(el);
@@ -733,10 +867,57 @@ const ROOM_TYPES = {
       }
       return { show: 'Commence par les dizaines, puis les unités 💪', say: 'Commence par les dizaines, puis les unités.' };
     },
+    explain(q, w) {
+      const { a, b, ans } = q;
+      const plus = q.op === '+';
+      const sign = plus ? '+' : '−';
+      const word = plus ? 'plus' : 'moins';
+      const gap = w - ans;
+      const oops = Math.abs(gap) === 10 ? `Tu as choisi ${w} : attention aux dizaines !`
+        : Math.abs(gap) <= 2 ? `Tu as choisi ${w} : c’est ${Math.abs(gap) === 1 ? 'un' : 'deux'} de ${gap > 0 ? 'trop' : 'moins'}. Recompte doucement !`
+        : `Tu as choisi ${w}.`;
+      const QMARK = '<span class="qmark">?</span>';
+      let steps; let say;
+      if (plus && a < 10 && b < 10 && ans > 10) {
+        // on passe par 10 : 8 + 5 = 8 + 2 + 3 = 10 + 3
+        const c = 10 - a;
+        steps = `<div class="dots">${'<span>🔵</span>'.repeat(a)}${'<span>🟠</span>'.repeat(c)}<span class="ex-sep">|</span>${'<span>🟠</span>'.repeat(b - c)}</div>
+          <div class="ex-line">${a} + ${b} = ${a} + <b class="ex-u">${c}</b> + ${b - c}</div>
+          <div class="ex-line">= <b class="ex-d">10</b> + ${b - c} = ${QMARK}</div>`;
+        say = `On passe par dix. ${a} plus ${c}, ça fait dix. Il reste encore ${b - c}. Dix plus ${b - c}, ça fait combien ?`;
+      } else if (q.small) {
+        // on compte sur la file des nombres
+        const hops = Array.from({ length: b }, (_, i) => (plus ? a + i + 1 : a - i - 1));
+        steps = `<div class="ex-line">Je pars de <b>${a}</b> et ${plus ? 'j’avance' : 'je recule'} de <b>${b}</b> :</div>
+          <div class="ex-hops"><span class="ex-hop start">${a}</span>${hops.map((x, i) => `<span class="ex-arrow">${plus ? '➜' : '⬅'}</span><span class="ex-hop ${i === b - 1 ? 'end' : ''}">${i === b - 1 ? '?' : x}</span>`).join('')}</div>`;
+        say = `Je pars de ${a}, et ${plus ? "j'avance" : 'je recule'} de ${b}, en comptant sur mes doigts : ${hops.slice(0, -1).join(', ')}${b > 1 ? ', et…' : ''} À toi de trouver le dernier !`;
+      } else {
+        // dizaines avec dizaines, unités avec unités
+        const A = digits(a);
+        const B = digits(b);
+        const R = digits(ans);
+        const du = plus ? A.u + B.u : A.u - B.u;
+        const dd = plus ? A.d + B.d : A.d - B.d;
+        const carry = plus && du >= 10;
+        steps = `<div class="ex-line big">${digitsHTML(a)} ${sign} ${digitsHTML(b)}</div>
+          <div class="ex-grid">
+            <span class="ex-d">Dizaines</span><span>${A.d} ${sign} ${B.d} = <b class="ex-d">${dd}</b></span>
+            <span class="ex-u">Unités</span><span>${A.u} ${sign} ${B.u} = <b class="ex-u">${du}</b></span>
+          </div>
+          ${carry ? '<p class="ex-note">10 unités = 1 dizaine de plus !</p>' : ''}
+          <div class="ex-line">= <b class="ex-d">${plural(R.d, 'dizaine')}</b> et <b class="ex-u">${plural(R.u, 'unité')}</b> = ${QMARK}</div>`;
+        say = `On calcule les dizaines avec les dizaines : ${A.d} ${word} ${B.d}, ça fait ${dd}. Puis les unités avec les unités : ${A.u} ${word} ${B.u}, ça fait ${du}.${carry ? ' Dix unités, ça fait une dizaine de plus.' : ''} Alors, ça fait combien ?`;
+      }
+      return {
+        show: oops,
+        html: `<div class="ex-op">${a} ${sign} ${b} = ${QMARK}</div>${steps}<p class="ex-note">À toi de finir le calcul ! 💪</p>`,
+        say: `${oops} ${say}`,
+      };
+    },
     render(body, q, api) {
       const op = h(`<div class="big-number">${q.a} ${q.op === '+' ? '+' : '−'} ${q.b} = <span class="qmark">?</span></div>`);
       body.append(op);
-      buildIslands(body, q.options.map((o) => ({ correct: o === q.ans, html: `<div class="isle-number">${o}</div>` })), api, () => {
+      buildIslands(body, q.options.map((o) => ({ correct: o === q.ans, value: o, html: `<div class="isle-number">${o}</div>` })), api, () => {
         op.querySelector('.qmark').outerHTML = `<span class="ans">${q.ans}</span>`;
       });
     },
@@ -754,6 +935,7 @@ const ROOM_TYPES = {
       ? 'Mot du jour ! Écoute bien le mot, puis navigue vers l’île où il est écrit.'
       : 'Mot du jour ! Trouve l’île où est écrit le même mot.',
     hint: (q) => ({ show: `Le mot commence par « ${q.word[0]} » 👀`, say: q.word }),
+    explain: (q, w) => explainWord(q.word, w),
     track: (q, firstTry) => recordWord(q.word, firstTry),
     render(body, q, api) {
       if (q.listen) {
@@ -764,7 +946,7 @@ const ROOM_TYPES = {
       } else {
         body.append(h(`<div class="sentence daily-word">${q.word}</div>`));
       }
-      buildIslands(body, q.options.map((o) => ({ correct: o === q.word, html: `<div class="word" style="--len:${Math.max(o.length, 4)}">${o}</div>` })), api);
+      buildIslands(body, q.options.map((o) => ({ correct: o === q.word, value: o, html: `<div class="word" style="--len:${Math.max(o.length, 4)}">${o}</div>` })), api);
     },
   },
 
@@ -787,13 +969,23 @@ const ROOM_TYPES = {
     hint: (q) => (q.text
       ? { show: 'Écoute la phrase entière 👂', say: q.text.replace('___', q.word) }
       : ROOM_TYPES.ecouteMot.hint(q)),
+    explain(q, w) {
+      if (!q.text) return explainWord(q.word, w);
+      const ex = explainWord(q.word, w, q.fmt);
+      const full = q.text.replace('___', q.fmt(q.word));
+      return {
+        show: 'Écoute la phrase avec le bon mot 👂',
+        html: `<div class="sentence ex-sentence">${esc(q.text).replace('___', `<mark class="good">${esc(q.fmt(q.word))}</mark>`)}</div>${ex.html}`,
+        say: `On dit : ${full} ${ex.say}`,
+      };
+    },
     track: (q, firstTry) => recordWord(q.word, firstTry),
     render(body, q, api) {
       if (!q.text) { ROOM_TYPES.ecouteMot.render(body, q, api); return; }
       body.append(h(`<div class="big-emoji small">${q.pic}</div>`));
       const sentence = h(`<div class="sentence">${q.text.replace('___', '<span class="blank">?</span>')}</div>`);
       body.append(sentence);
-      buildIslands(body, q.options.map((o) => ({ correct: o === q.word, html: `<div class="word" style="--len:${Math.max(o.length, 4)}">${q.fmt(o)}</div>` })), api, () => {
+      buildIslands(body, q.options.map((o) => ({ correct: o === q.word, value: o, html: `<div class="word" style="--len:${Math.max(o.length, 4)}">${q.fmt(o)}</div>` })), api, () => {
         const b = sentence.querySelector('.blank');
         b.textContent = q.fmt(q.word);
         b.classList.add('filled');
@@ -826,6 +1018,21 @@ const ROOM_TYPES = {
       show: `Cherche le plus ${q.desc ? 'grand' : 'petit'} nombre qui reste. Regarde d’abord les dizaines 👀`,
       say: `Cherche le plus ${q.desc ? 'grand' : 'petit'} nombre qui reste. Regarde d'abord les dizaines.`,
     }),
+    explain(q, { n, pos }) {
+      const want = q.target[pos];
+      const big = q.desc ? 'grand' : 'petit';
+      const W = digits(want);
+      const N = digits(n);
+      const why = W.d !== N.d
+        ? `On regarde d'abord les dizaines : ${want} a ${plural(W.d, 'dizaine')}, ${n} en a ${N.d}. Donc ${want} est plus ${W.d < N.d ? 'petit' : 'grand'}.`
+        : `${want} et ${n} ont tous les deux ${plural(W.d, 'dizaine')}. Alors on regarde les unités : ${W.u} et ${N.u}. Donc ${want} est plus ${W.u < N.u ? 'petit' : 'grand'}.`;
+      return {
+        show: `Le plus ${big} qui reste, c’est ${want} 👇`,
+        html: `<div class="ex-order">${q.target.slice(pos).map((x) => `<span class="ex-chip ${x === want ? 'good' : x === n ? 'bad' : ''}">${digitsHTML(x)}</span>`).join(`<span class="ex-arrow">${q.desc ? '&gt;' : '&lt;'}</span>`)}</div>
+          <p class="ex-note">${why}</p>`,
+        say: `Le plus ${big} qui reste, c'est ${want}. ${why}`,
+      };
+    },
     render(body, q, api) {
       const row = h(`<div class="torches">${q.target.map(() => '<div class="torch"><span class="flame">🏮</span><span class="tval">?</span></div>').join('')}</div>`);
       const label = h(`<div class="order-hint">${q.desc ? 'plus grand ➜ plus petit' : 'plus petit ➜ plus grand'}</div>`);
@@ -844,7 +1051,7 @@ const ROOM_TYPES = {
           if (pos === q.target.length) setTimeout(() => api.success(), 450);
         } else {
           b.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-12px)' }, { transform: 'translateX(10px)' }, { transform: 'translateX(0)' }], { duration: 400 });
-          api.fail();
+          api.fail(undefined, { n, pos });
         }
       }));
       body.append(row, label, pool);
@@ -1244,9 +1451,11 @@ function enterStep() {
         <span class="bubble-text"></span>
         <button class="round-btn say" title="Écouter la consigne">🔊</button>
         <button class="round-btn hint hidden" title="Un indice">💡</button>
+        <button class="why-btn hidden">🤔 Pourquoi ?</button>
       </div>
     </div>
     <div class="hint-box hidden"></div>
+    <div class="explain hidden"></div>
     <div class="room-body"></div>
   </div>`);
   const stage = document.getElementById('stage');
@@ -1258,6 +1467,8 @@ function enterStep() {
   const bubbleText = el.querySelector('.bubble-text');
   const hintBtn = el.querySelector('.hint');
   const hintBox = el.querySelector('.hint-box');
+  const whyBtn = el.querySelector('.why-btn');
+  const explainBox = el.querySelector('.explain');
   const say = (t) => { bubbleText.textContent = t; restart(bubble, 'bump'); };
   const instr = T.instruction(q);
   say(RUN.index === 0 && !RUN.greeted ? `${profLine('start')} ${instr}` : instr);
@@ -1273,9 +1484,34 @@ function enterStep() {
     if (hi.html) { hintBox.innerHTML = hi.html; hintBox.classList.remove('hidden'); restart(hintBox, 'bump'); }
   });
 
+  // « Pourquoi ? » : le prof explique la dernière erreur
+  whyBtn.addEventListener('click', () => {
+    const ex = T.explain(q, step.lastWrong);
+    explainBox.innerHTML = `${ex.html}<button class="btn go got-it">J’ai compris ! 👍</button>`;
+    explainBox.classList.remove('hidden');
+    restart(explainBox, 'bump');
+    whyBtn.classList.add('hidden');
+    profMood(el, 'think', 0);
+    say(ex.show);
+    speak(ex.say);
+    explainBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    explainBox.querySelector('.got-it').addEventListener('click', () => {
+      api.clearWhy();
+      SFX.click();
+      profMood(el, 'happy');
+      say('À toi de jouer ! 💪');
+      speak('À toi de jouer !');
+    });
+  });
+
   const api = {
     say,
-    fail(msg) {
+    clearWhy() {
+      whyBtn.classList.add('hidden');
+      explainBox.classList.add('hidden');
+      explainBox.innerHTML = '';
+    },
+    fail(msg, wrong) {
       if (step.solved) return;
       step.mistakes++;
       RUN.streak = 0;
@@ -1285,10 +1521,17 @@ function enterStep() {
       profMood(el, 'oops');
       say(step.mistakes >= 2 && !msg ? profLine('cheer') : msg || pick(OOPS));
       hintBtn.classList.remove('hidden');
+      if (T.explain && wrong !== undefined) {
+        step.lastWrong = wrong;
+        explainBox.classList.add('hidden');
+        whyBtn.classList.remove('hidden');
+        restart(whyBtn, 'bump');
+      }
     },
     success() {
       if (step.solved) return;
       step.solved = true;
+      api.clearWhy();
       const stars = step.mistakes === 0 ? 3 : step.mistakes === 1 ? 2 : 1;
       RUN.stars += stars;
       if (step.mistakes === 0) RUN.streak++;
