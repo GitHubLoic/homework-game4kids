@@ -16,6 +16,9 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 html, body { margin: 0; min-height: 100%; }
+/* Safari (iPhone) : pas de grossissement automatique du texte, et des champs dessinés par le jeu */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+input, select, textarea, button { -webkit-appearance: none; appearance: none; }
 
 body {
   min-height: 100dvh;
@@ -99,18 +102,19 @@ button { font-family: inherit; color: inherit; touch-action: manipulation; }
   border: 3px solid #d3ecff; outline: none; user-select: text;
 }
 .field input:focus { border-color: var(--bg1); }
-.seg { display: flex; flex-wrap: wrap; gap: 8px; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
 .seg button, .chip {
-  font-size: 18px; font-weight: 600; padding: 10px 16px; border-radius: 14px;
-  border: 3px solid transparent; background: #eaf6ff; cursor: pointer;
+  font-size: 18px; font-weight: 600; padding: 10px 8px; border-radius: 14px; line-height: 1.15;
+  border: 3px solid transparent; background: #eaf6ff; cursor: pointer; text-align: center;
 }
-.chip { font-size: 16px; padding: 8px 12px; }
+.chip { font-size: 16px; padding: 8px 4px; }
 .seg button.sel, .chip.sel { border-color: var(--bg1); background: #fff6cf; }
 .voice-pick { display: flex; gap: 8px; margin-top: 8px; }
 .voice-pick input { flex: 1; min-width: 0; font: inherit; font-size: 22px; padding: 8px 14px; border-radius: 16px; border: 3px solid #d3ecff; outline: none; user-select: text; }
 .voice-pick select {
-  flex: 1; min-width: 0; font: inherit; font-size: 18px; font-weight: 600; padding: 10px 12px;
-  border-radius: 14px; border: 3px solid #d3ecff; background: #fff; color: var(--ink);
+  flex: 1; min-width: 0; font: inherit; font-size: 18px; font-weight: 600; padding: 10px 36px 10px 12px;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%234a6b8a' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center / 14px;
+  border-radius: 14px; border: 3px solid #d3ecff; color: var(--ink);
 }
 .sound-report { display: block; background: #f2f8ff; border-radius: 12px; padding: 8px 12px; font-size: 15px; line-height: 1.5; color: #2b2340; }
 .seg-btn { font-size: 18px; font-weight: 600; padding: 10px 16px; border-radius: 14px; border: 3px solid transparent; background: #eaf6ff; cursor: pointer; white-space: nowrap; }
@@ -128,10 +132,13 @@ button { font-family: inherit; color: inherit; touch-action: manipulation; }
 .boat-preview .boat-svg { position: absolute; left: 10%; bottom: 16%; width: 80%; animation: rock 2.4s ease-in-out infinite; }
 .boat-preview.happy .boat-svg { animation: hop .5s ease-in-out 2; }
 .boat-opts { flex: 1; min-width: 220px; display: grid; gap: 10px; }
-.opt-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.opt-row em { font-style: normal; font-weight: 600; color: #4a6b8a; width: 56px; }
+.opt-row { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 8px; align-items: center; }
+.opt-row em { font-style: normal; font-weight: 600; color: #4a6b8a; }
+.opt-list { display: grid; gap: 8px; }
+.opt-list.chips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.opt-list.swatches { grid-template-columns: repeat(6, minmax(0, 1fr)); justify-items: center; }
 .swatch {
-  width: 36px; height: 36px; border-radius: 50%; border: 3px solid #fff; cursor: pointer;
+  width: 100%; max-width: 36px; aspect-ratio: 1; padding: 0; border-radius: 50%; border: 3px solid #fff; cursor: pointer;
   box-shadow: 0 0 0 2px #ccd; transition: transform .15s;
 }
 .swatch.sel { box-shadow: 0 0 0 3px var(--bg1); transform: scale(1.15); }
@@ -748,6 +755,12 @@ button { font-family: inherit; color: inherit; touch-action: manipulation; }
   .why-btn { font-size: 15px; padding: 7px 10px; }
   .ex-compare, .ex-dets { grid-template-columns: 1fr; }
   .prof-pick { grid-template-columns: repeat(2, 1fr); }
+  .setup.card { padding: 18px 16px; }
+  .boat-maker { flex-direction: column; align-items: stretch; gap: 12px; }
+  .boat-preview { width: 120px; height: 120px; align-self: center; }
+  .boat-opts { min-width: 0; }
+  .seg button { font-size: 16px; }
+  .btn.big { font-size: 22px; padding: 16px 26px; }
   .streak { font-size: 18px; padding: 6px 10px; }
   .boat { --bw: 88px; }
   .bravo-av { width: 96px; margin-top: -64px; }

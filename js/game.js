@@ -1222,10 +1222,10 @@ function renderHome() {
         <div class="boat-maker">
           <div class="boat-preview"><div class="mini-sea"></div>${boatSVG(S.boat)}</div>
           <div class="boat-opts">
-            <div class="opt-row" data-k="pattern"><em>Voile</em>${BOAT_OPTIONS.pattern.map(([v, l]) =>
-              `<button class="chip ${S.boat.pattern === v ? 'sel' : ''}" data-v="${v}">${l}</button>`).join('')}</div>
-            ${[['hull', 'Coque'], ['sail', 'Tissu']].map(([k, l]) => `<div class="opt-row" data-k="${k}"><em>${l}</em>${BOAT_OPTIONS[k].map((c) =>
-              `<button class="swatch ${S.boat[k] === c ? 'sel' : ''}" data-v="${c}" style="background:${c}" aria-label="${l}"></button>`).join('')}</div>`).join('')}
+            <div class="opt-row" data-k="pattern"><em>Voile</em><span class="opt-list chips">${BOAT_OPTIONS.pattern.map(([v, l]) =>
+              `<button class="chip ${S.boat.pattern === v ? 'sel' : ''}" data-v="${v}">${l}</button>`).join('')}</span></div>
+            ${[['hull', 'Coque'], ['sail', 'Tissu']].map(([k, l]) => `<div class="opt-row" data-k="${k}"><em>${l}</em><span class="opt-list swatches">${BOAT_OPTIONS[k].map((c) =>
+              `<button class="swatch ${S.boat[k] === c ? 'sel' : ''}" data-v="${c}" style="background:${c}" aria-label="${l}"></button>`).join('')}</span></div>`).join('')}
           </div>
         </div>
       </div>
@@ -1233,13 +1233,13 @@ function renderHome() {
       <label class="field"><span>📚 Mots du jour à travailler <small>(séparés par des espaces)</small></span>
         <textarea id="daily" rows="3" spellcheck="false">${esc(dailyWords().join(' '))}</textarea>
       </label>
-      <div class="field"><span>Les épreuves</span>${seg('mode', [['mix', '🎲 Les deux'], ['lecture', '📖 Lecture'], ['maths', '🔢 Maths']])}</div>
+      <div class="field"><span>Les épreuves</span>${seg('mode', [['mix', '🎲 Tout'], ['lecture', '📖 Lecture'], ['maths', '🔢 Maths']])}</div>
       <div class="field"><span>Ton professeur</span>
         <div class="prof-pick">${Object.entries(PROFS).map(([id, p]) => `<button class="prof-card ${S.prof === id ? 'sel' : ''}" data-id="${id}">
           <span class="prof-mini">${profSVG('idle', id)}</span><b>${p.name}</b><small>${p.desc}</small></button>`).join('')}</div>
         <div class="voice-pick"><select id="voice-name" aria-label="Voix du professeur"></select><button class="seg-btn test-voice" type="button">▶️ Écouter</button></div>
       </div>
-      <div class="field"><span>Le son</span>${seg('sound', [[true, '🔔 Bruitages'], [false, '🔕 Sans bruitages']])}${seg('voice', [[true, '🗣️ Voix qui lit les consignes'], [false, '🤫 Sans voix']])}
+      <div class="field"><span>Le son</span>${seg('sound', [[true, '🔔 Bruitages'], [false, '🔕 Sans bruitages']])}${seg('voice', [[true, '🗣️ Voix qui lit'], [false, '🤫 Sans voix']])}
         <div class="voice-pick"><button class="seg-btn test-sound" type="button">🔊 Tester le son</button></div>
         <small class="sound-report hidden"></small>
       </div>
