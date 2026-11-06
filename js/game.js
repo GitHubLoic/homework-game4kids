@@ -57,7 +57,7 @@ const SFX = (() => {
       if (!AC) return null;
       ctx = new AC();
     }
-    if (ctx.state === 'suspended') ctx.resume();
+    if (ctx.state !== 'running') ctx.resume().catch(() => {});
     return ctx;
   }
   function tone(f, d, type = 'sine', v = 0.15, t0 = 0, slide) {
@@ -78,6 +78,7 @@ const SFX = (() => {
     o.stop(t + d + 0.05);
   }
   return {
+    ctx: getCtx,
     click: () => tone(660, 0.06, 'triangle', 0.08),
     pop: () => tone(520, 0.12, 'sine', 0.2, 0, 1040),
     good: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.18, 'triangle', 0.16, i * 0.09)),
@@ -92,18 +93,47 @@ const SFX = (() => {
   };
 })();
 
+// iPhone / iPad : le son et la voix ne marchent qu'une fois « débloqués » pendant un toucher.
+// On joue donc un son muet et une phrase quasi muette au premier toucher.
+function unlockAudio() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) {
+      const x = SFX.ctx();
+      const src = x.createBufferSource();
+      src.buffer = x.createBuffer(1, 1, 22050);
+      src.connect(x.destination);
+      src.start(0);
+    }
+    if ('speechSynthesis' in window && !speechSynthesis.speaking) {
+      // iOS ignore une phrase vide : il faut une vraie phrase, quasi muette
+      const u = new SpeechSynthesisUtterance('bonjour');
+      u.volume = 0.01;
+      speechSynthesis.speak(u);
+    }
+  } catch (e) { /* pas de son disponible */ }
+  const c = SFX.ctx();
+  if (!c || c.state === 'running') {
+    ['touchend', 'pointerup', 'keydown'].forEach((t) => removeEventListener(t, unlockAudio, true));
+  }
+}
+['touchend', 'pointerup', 'keydown'].forEach((t) => addEventListener(t, unlockAudio, true));
+
 // ================= Voix (synthèse vocale du navigateur) =================
 function canSpeak() {
   return S.voice && 'speechSynthesis' in window;
 }
 
-function speak(text, { queue = false, rate = 0.9 } = {}) {
-  if (!canSpeak()) return;
+function speak(text, { queue = false, rate = 0.9, force = false } = {}) {
+  if (!force && !canSpeak()) return null;
+  if (!('speechSynthesis' in window)) return null;
   try {
-    if (!queue) speechSynthesis.cancel();
+    // Safari (iPhone) perd parfois la phrase si on annule pour rien juste avant
+    const busy = speechSynthesis.speaking || speechSynthesis.pending;
+    if (!queue && busy) speechSynthesis.cancel();
     let clean = text.replace(/[^\p{L}\p{N}\s.,!?'’:-]/gu, '').trim();
     if (S.name && S.nameSay) clean = clean.replace(new RegExp(`(^|[^\\p{L}])${S.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}])`, 'giu'), `$1${S.nameSay}`);
-    if (!clean) return;
+    if (!clean) return null;
     const u = new SpeechSynthesisUtterance(clean);
     u.lang = 'fr-FR';
     const { voice } = curProf();
@@ -112,7 +142,8 @@ function speak(text, { queue = false, rate = 0.9 } = {}) {
     const v = voiceFor(S.prof);
     if (v) u.voice = v;
     speechSynthesis.speak(u);
-  } catch (e) { /* pas de voix disponible */ }
+    return u;
+  } catch (e) { return null; /* pas de voix disponible */ }
 }
 
 // Voix françaises triées de la plus naturelle à la moins naturelle
@@ -619,8 +650,18 @@ const ROOM_TYPES = {
     render(body, q, api) {
       let idx = 0;
       let busy = false;
-      const card = h('<div class="clue-card"><span class="tri-count"></span><div class="sentence clue-text"></div><div class="clue-rule hidden"></div></div>');
+      const card = h('<div class="clue-card"><span class="tri-count"></span><div class="sentence clue-text"></div><div class="clue-tap hidden"></div><div class="clue-rule hidden"></div></div>');
       const text = card.querySelector('.clue-text');
+      const tap = card.querySelector('.clue-tap');
+      let nudgeTimer;
+      // si l'enfant ne trouve pas, on fait clignoter le prochain indice
+      const nudgeLater = () => {
+        clearTimeout(nudgeTimer);
+        nudgeTimer = setTimeout(() => {
+          const next = [...text.querySelectorAll('.piece.clue:not(.found)')][0];
+          if (next && next.isConnected) restart(next, 'nudge');
+        }, 7000);
+      };
       const count = card.querySelector('.tri-count');
       const rule = card.querySelector('.clue-rule');
       const row = islandsRow(2);
@@ -644,6 +685,8 @@ const ROOM_TYPES = {
         text.textContent = groupText(g);
         text.classList.remove('pieces');
         rule.classList.add('hidden');
+        tap.classList.add('hidden');
+        clearTimeout(nudgeTimer);
         row.classList.remove('faded');
         isles.forEach((isl) => isl.classList.remove('chosen-ok'));
         api.clearWhy();
@@ -652,6 +695,12 @@ const ROOM_TYPES = {
       }
 
       function choose(plural, isle) {
+        if (q.phase === 'indices' && !busy) {
+          // les îles ne servent plus : on montre où toucher
+          api.say('Maintenant, touche les indices dans les mots 👆');
+          restart(tap, 'bump');
+          return;
+        }
         if (busy || q.phase !== 'choix') return;
         const g = q.items[idx];
         if (g.plural !== plural) {
@@ -673,7 +722,7 @@ const ROOM_TYPES = {
         text.classList.add('pieces');
         text.innerHTML = '';
         g.pieces.forEach((p, i) => {
-          const b = h(`<button class="piece ${p.glue ? 'glue' : ''}">${esc(p.t)}</button>`);
+          const b = h(`<button class="piece tappable ${p.glue ? 'glue' : ''} ${p.clue ? 'clue' : ''}" style="--i:${i}">${esc(p.t)}</button>`);
           if (i && !p.glue) text.append(document.createTextNode(' '));
           b.addEventListener('click', async () => {
             if (busy || b.classList.contains('found')) return;
@@ -685,11 +734,17 @@ const ROOM_TYPES = {
             b.classList.add('found', `k-${p.kind}`);
             SFX.unlock();
             found++;
+            nudgeLater();
             if (found < total) {
-              api.say(`Oui ! Encore ${total - found} indice${total - found > 1 ? 's' : ''} à trouver 🔍`);
+              // sous la phrase (et pas dans la bulle) pour que les mots ne bougent pas sous le doigt
+              tap.textContent = `✅ Oui ! Encore ${total - found} indice${total - found > 1 ? 's' : ''} à trouver 🔍`;
+              restart(tap, 'bump');
               return;
             }
             busy = true;
+            clearTimeout(nudgeTimer);
+            tap.classList.add('hidden');
+            text.querySelectorAll('.piece').forEach((x) => x.classList.remove('tappable'));
             rule.textContent = `✨ ${clueRule(g)}`;
             rule.classList.remove('hidden');
             restart(rule, 'tri-in');
@@ -704,6 +759,10 @@ const ROOM_TYPES = {
         const msg = g.plural
           ? `Oui, c’est le pluriel ! Qu’est-ce qui te le dit ? Touche les ${total} indices.`
           : 'Oui, c’est le singulier ! Qu’est-ce qui te le dit ? Touche l’indice.';
+        tap.textContent = total > 1 ? `👆 Touche les ${total} indices dans les mots` : '👆 Touche le mot qui le montre';
+        tap.classList.remove('hidden');
+        restart(tap, 'bump');
+        nudgeLater();
         api.say(msg);
         speak(msg);
       }
@@ -1180,7 +1239,10 @@ function renderHome() {
           <span class="prof-mini">${profSVG('idle', id)}</span><b>${p.name}</b><small>${p.desc}</small></button>`).join('')}</div>
         <div class="voice-pick"><select id="voice-name" aria-label="Voix du professeur"></select><button class="seg-btn test-voice" type="button">▶️ Écouter</button></div>
       </div>
-      <div class="field"><span>Le son</span>${seg('sound', [[true, '🔔 Bruitages'], [false, '🔕 Sans bruitages']])}${seg('voice', [[true, '🗣️ Voix qui lit les consignes'], [false, '🤫 Sans voix']])}</div>
+      <div class="field"><span>Le son</span>${seg('sound', [[true, '🔔 Bruitages'], [false, '🔕 Sans bruitages']])}${seg('voice', [[true, '🗣️ Voix qui lit les consignes'], [false, '🤫 Sans voix']])}
+        <div class="voice-pick"><button class="seg-btn test-sound" type="button">🔊 Tester le son</button></div>
+        <small class="sound-report hidden"></small>
+      </div>
     </div>
     <button class="btn big pulse go-btn">Larguer les amarres ! ⛵</button>
   </section>`;
@@ -1226,6 +1288,43 @@ function renderHome() {
     if (!S.voice) { S.voice = true; save(); renderHome(); }
     helloProf();
   });
+  // Test du son : joue un bruitage et fait parler le prof, puis dit ce qui a marché (utile sur iPhone)
+  app.querySelector('.test-sound').addEventListener('click', () => {
+    const report = app.querySelector('.sound-report');
+    const lines = [];
+    const show = () => { report.innerHTML = lines.map(esc).join('<br>'); report.classList.remove('hidden'); };
+    const attempt = (label, fn) => { try { fn(); } catch (e) { lines.push(`❌ ${label} : ${e.message}`); } };
+    let x = null;
+    attempt('Bruitages', () => {
+      x = SFX.ctx();
+      const wasSound = S.sound;
+      S.sound = true; SFX.good(); S.sound = wasSound;
+      lines.push(x ? `🔔 Bruitages : ${x.state === 'running' ? 'prêts' : `bloqués (${x.state})`}` : '🔔 Bruitages : pas pris en charge');
+    });
+    lines.push('ℹ️ Rien entendu sur iPhone ? Désactive le mode silencieux.');
+    if (!S.sound || !S.voice) lines.push(`ℹ️ Dans le jeu : bruitages ${S.sound ? 'oui' : 'NON'}, voix ${S.voice ? 'oui' : 'NON'}`);
+    if (!('speechSynthesis' in window)) {
+      lines.push('🗣️ Voix : pas prise en charge par ce navigateur');
+      show();
+      return;
+    }
+    let started = false;
+    attempt('Voix', () => {
+      const v = voiceFor(S.prof);
+      lines.push(`🗣️ Voix : ${frenchVoices().length} voix françaises (${speechSynthesis.getVoices().length} en tout), choisie : ${v ? v.name : 'celle par défaut'}`);
+      const u = speak(`Bonjour ${S.name || ''} ! Tu m'entends bien ?`, { force: true });
+      if (!u) { lines.push('❌ La phrase n’a pas pu être créée'); return; }
+      u.onstart = () => { started = true; lines.push('✅ La voix parle'); show(); };
+      u.onerror = (e) => { lines.push(`❌ Erreur de la voix : ${e.error}`); show(); };
+    });
+    setTimeout(() => {
+      if (!started) lines.push(`⚠️ La voix ne démarre pas (speaking=${speechSynthesis.speaking}, pending=${speechSynthesis.pending})`);
+      if (x && x.state !== 'running') lines.push(`⚠️ Bruitages toujours bloqués (${x.state})`);
+      show();
+    }, 2500);
+    show();
+  });
+
   app.querySelectorAll('.prof-card').forEach((c) => c.addEventListener('click', () => {
     S.prof = c.dataset.id; save(); SFX.pop();
     app.querySelectorAll('.prof-card').forEach((x) => x.classList.toggle('sel', x === c));
