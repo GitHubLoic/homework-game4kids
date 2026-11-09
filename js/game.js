@@ -1600,40 +1600,46 @@ function renderMap() {
   const max = STEPS_PER_WORLD * 3;
   const nextIdx = WORLDS.findIndex((w, i) => isUnlocked(i) && !(S.worlds[w.id] || {}).done);
   const destination = WORLDS[nextIdx < 0 ? 0 : nextIdx];
-  app.innerHTML = `<section class="map">
+  app.innerHTML = `<section class="map illustrated-map">
     <header class="map-head">
       <button class="icon-btn" id="btn-home" title="Réglages">⚙️</button>
-      <div class="hello"><span class="hello-av">${boatSVG(S.boat)}</span> Ahoy ${esc(S.name || 'moussaillon')} !</div>
+      <div class="hello">Ahoy ${esc(S.name || 'moussaillon')} !</div>
       <div class="star-count">⭐ ${totalStars()} <span>étoiles</span></div>
     </header>
-    <div class="chart-title"><span class="chart-eyebrow">LE GRAND VOYAGE</span><h1>Les Îles <span>Magiques</span></h1><p>Cinq mers, mille découvertes. À toi l’aventure !</p></div>
+    <div class="chart-title"><h1>Les Îles <span>Magiques</span></h1><span class="title-star" aria-hidden="true">★</span></div>
     <div class="archipelago" aria-label="Carte des cinq mers">
     ${chartScenery()}
-    <div class="chart-boat" aria-hidden="true">${boatSVG(S.boat)}<span>Ton bateau</span></div>
+    <div class="chart-boat" aria-hidden="true">${boatSVG(S.boat)}</div>
     <div class="worlds">${WORLDS.map((w, i) => {
       const prog = S.worlds[w.id] || {};
       const open = isUnlocked(i);
       return `<button class="world-card ${open ? '' : 'locked'} ${i === nextIdx ? 'next' : ''}" data-i="${i}" aria-label="${w.name} — ${open ? (prog.done ? 'Voyage terminé' : 'À explorer') : 'Termine la mer précédente pour ouvrir cette île'}" aria-disabled="${!open}" style="--c1:${w.c1};--c2:${w.c2};--i:${i}">
-        <span class="island-status">${prog.done ? '✓ Explorée' : i === nextIdx ? '⚑ Ton prochain voyage' : open ? 'À explorer' : '🔒 À découvrir'}</span>
         ${islandArt(w.id)}
-        <span class="w-name">${w.name}</span>
-        <span class="w-stars">${open ? (prog.done ? `⭐ ${prog.best} / ${max}` : 'L’aventure commence ici') : 'Termine la mer d’avant'}</span>
+        <span class="w-name">${CHART_LABELS[w.id]}</span>
+        <span class="island-status">${prog.done ? `★ ${prog.best} / ${max}` : i === nextIdx ? 'Prochaine escale' : open ? 'À explorer' : '🔒 À découvrir'}</span>
       </button>`;
     }).join('')}</div>
     </div>
-    <div class="chart-departure">${profSays('Prêt pour de nouvelles découvertes, capitaine ?')}<button class="btn big chart-continue" id="btn-continue">${nextIdx < 0 ? 'Repartir à l’aventure' : 'Continuer l’aventure'} <span aria-hidden="true">➜</span></button><span class="chart-destination">Cap sur ${esc(destination.name)} !</span></div>
-    ${dailyWords().length ? `<div class="words-board">
-      <b>📚 Mes mots du jour</b>
+    <div class="chart-crew">${chartProfessor()}<p class="crew-bubble">Prêt,<br>capitaine ?</p></div>
+    <div class="chart-departure"><button class="btn big chart-continue" id="btn-continue">${nextIdx < 0 ? 'Repartir à l’aventure' : 'Continuer l’aventure'} <span aria-hidden="true">➜</span></button><span class="chart-destination">Cap sur ${CHART_LABELS[destination.id]} !</span></div>
+    <p class="chart-notice" role="status" aria-live="polite"></p>
+    ${dailyWords().length ? `<details class="words-board">
+      <summary>📚 Mes mots du jour</summary>
       <div class="word-chips">${dailyWords().map((w) => `<span class="wchip ${wordMastery(w)}">${esc(w)}</span>`).join('')}</div>
       <small><span class="wchip good">bien su</span> <span class="wchip learning">en cours</span> <span class="wchip hard">à revoir</span></small>
-    </div>` : ''}
+    </details>` : ''}
   </section>`;
   app.querySelector('#btn-home').addEventListener('click', () => { SFX.click(); renderHome(); });
   app.querySelector('#btn-continue').addEventListener('click', () => { SFX.good(); startWorld(destination); });
+  let noticeTimer;
   app.querySelectorAll('.world-card').forEach((c) => c.addEventListener('click', () => {
     const i = Number(c.dataset.i);
     if (!isUnlocked(i)) {
       restart(c, 'shake'); SFX.bad();
+      const notice = app.querySelector('.chart-notice');
+      notice.textContent = `Pour découvrir ${CHART_LABELS[WORLDS[i].id]}, termine d’abord ${CHART_LABELS[WORLDS[i - 1].id]}.`;
+      clearTimeout(noticeTimer);
+      noticeTimer = setTimeout(() => { notice.textContent = ''; }, 5000);
       profMood(app, 'oops');
       speak('Cette mer est encore fermée. Termine la mer d’avant pour l’ouvrir !');
       return;
