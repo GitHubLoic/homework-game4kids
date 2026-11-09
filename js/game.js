@@ -290,6 +290,235 @@ function duText(n) {
   return `${plural(d, 'dizaine')} et ${plural(u, 'unité')}`;
 }
 
+// ================= Centaines =================
+const cdu = (n) => ({ c: Math.floor(n / 100), d: Math.floor(n / 10) % 10, u: n % 10 });
+
+function cduText(n, order = ['c', 'd', 'u']) {
+  const p = cdu(n);
+  const names = { c: 'centaine', d: 'dizaine', u: 'unité' };
+  const parts = order.map((k) => plural(p[k], names[k]));
+  return `${parts.slice(0, -1).join(', ')} et ${parts[parts.length - 1]}`;
+}
+
+// Un nombre en lettres (orthographe traditionnelle : « deux cent soixante-cinq »)
+const UNIT_WORDS = ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix',
+  'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize'];
+const TEN_WORDS = ['', '', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante'];
+function below100Words(n) {
+  if (n <= 16) return UNIT_WORDS[n];
+  if (n < 20) return `dix-${UNIT_WORDS[n - 10]}`;
+  const t = Math.floor(n / 10);
+  const u = n % 10;
+  if (t === 7) return n === 71 ? 'soixante et onze' : `soixante-${below100Words(n - 60)}`;
+  if (t === 8) return u ? `quatre-vingt-${UNIT_WORDS[u]}` : 'quatre-vingts';
+  if (t === 9) return `quatre-vingt-${below100Words(n - 80)}`;
+  if (!u) return TEN_WORDS[t];
+  return u === 1 ? `${TEN_WORDS[t]} et un` : `${TEN_WORDS[t]}-${UNIT_WORDS[u]}`;
+}
+// renvoie [partie centaines, reste] pour pouvoir les colorier
+function numberWordParts(n) {
+  const c = Math.floor(n / 100);
+  const r = n % 100;
+  if (!c) return ['', below100Words(r)];
+  const head = c === 1 ? 'cent' : `${UNIT_WORDS[c]} cent${r ? '' : 's'}`;
+  return [head, r ? below100Words(r) : ''];
+}
+const numberWords = (n) => numberWordParts(n).filter(Boolean).join(' ');
+const wordsSplitHTML = (n) => numberWordParts(n).map((p, i) => (p ? `<mark class="${i ? 'w-r' : 'w-c'}">${p}</mark>` : '')).filter(Boolean).join(' ');
+
+const HUNDRED = '<span class="hundred"></span>';
+const TEN = `<span class="ten">${'<i></i>'.repeat(10)}</span>`;
+const UNIT = '<i class="unit"></i>';
+// plaques de 100, barres de 10, cubes de 1
+function hBlocksHTML(n, cls = '') {
+  const { c, d, u } = cdu(n);
+  return `<div class="blocks hblocks ${cls}"><div class="hundreds">${HUNDRED.repeat(c)}</div><div class="tens">${TEN.repeat(d)}</div><div class="units">${UNIT.repeat(u)}</div></div>`;
+}
+
+// Le tableau C | D | U
+function cduTableHTML(n, cls = '') {
+  const { c, d, u } = cdu(n);
+  return `<div class="cdu ${cls}"><span class="c"><small>C</small><b>${c}</b></span><span class="d"><small>D</small><b>${d}</b></span><span class="u"><small>U</small><b>${u}</b></span></div>`;
+}
+const digits3HTML = (n) => { const { c, d, u } = cdu(n); return `<b class="ex-c">${c}</b><b class="ex-d">${d}</b><b class="ex-u">${u}</b>`; };
+
+// Nombres « pièges » proches : chiffres échangés, zéro oublié, ±100, ±10…
+function hundredOptions(n, count, join = false) {
+  const { c, d, u } = cdu(n);
+  const cands = [];
+  if (join && n % 100 > 9 && Math.random() < 0.6) cands.push(Number(`${c * 100}${n % 100}`)); // « 200 » + « 65 » = 20065
+  const near = [];
+  if (d !== u) near.push(c * 100 + u * 10 + d);
+  if (d && d !== c) near.push(d * 100 + c * 10 + u);
+  if (d) near.push(c * 100 + u);
+  else near.push(c * 100 + u * 10);
+  near.push(n + 100, n - 100, n + 10, n - 10, n + 1);
+  cands.push(...shuffle(near));
+  const opts = [n];
+  for (const x of cands) {
+    if (opts.length >= count) break;
+    if ((x >= 100 && x <= 999) || x > 9999) { if (!opts.includes(x)) opts.push(x); }
+  }
+  while (opts.length < count) {
+    const x = rand(100, 999);
+    if (!opts.includes(x)) opts.push(x);
+  }
+  return shuffle(opts);
+}
+
+// Un nombre à 3 chiffres expliqué : chiffres en couleur, blocs et texte
+function numberCard3HTML(n, label) {
+  return `<div class="ex-num"><small>${label}</small><div class="ex-digits">${digits3HTML(n)}</div>
+    <div class="ex-blocks">${hBlocksHTML(n, 'tiny')}</div>
+    <span>${cduText(n)}</span></div>`;
+}
+
+function explainNumber3(n, wrong) {
+  const N = cdu(n);
+  if (wrong > 999) {
+    const r = n % 100;
+    return {
+      show: `${n} s’écrit avec 3 chiffres seulement ! ☝️`,
+      html: `<div class="ex-pair">${numberCard3HTML(n, 'Le bon nombre ✅')}
+        <div class="ex-num"><small>Ton choix ❌</small><div class="ex-digits">${wrong}</div><span>trop de chiffres !</span></div></div>
+        <p class="ex-note">On ne colle pas ${N.c * 100} et ${r} ! ${cduText(n)} : chaque chiffre a <b>une seule</b> case.</p>`,
+      say: `${n} s'écrit avec trois chiffres seulement. On ne colle pas ${N.c * 100} et ${r}. ${n}, c'est ${cduText(n)}.`,
+    };
+  }
+  const W = cdu(wrong);
+  const mixed = [N.c, N.d, N.u].sort().join() === [W.c, W.d, W.u].sort().join();
+  const where = 'À gauche les centaines, au milieu les dizaines, à droite les unités.';
+  return {
+    show: mixed ? 'Attention, tu as mélangé l’ordre des chiffres ! 🔄' : `${n}, c’est ${cduText(n)} 👇`,
+    html: `<div class="ex-pair">${numberCard3HTML(n, 'Le bon nombre ✅')}${numberCard3HTML(wrong, 'Ton choix ❌')}</div>
+      <p class="ex-note">${where}</p>`,
+    say: `${mixed ? 'Attention, tu as mélangé l’ordre des chiffres. ' : ''}${n}, c'est ${cduText(n)}. ${where} Toi, tu as choisi ${wrong}, c'est ${cduText(wrong)}.`,
+  };
+}
+
+// « deux cent » → 2 centaines, « soixante-cinq » → 65
+function wordsHint(n) {
+  const [head, rest] = numberWordParts(n);
+  const { c } = cdu(n);
+  const r = n % 100;
+  const show = [head && `« ${head} » → ${plural(c, 'centaine')}`, rest && `« ${rest} » → ${r}`].filter(Boolean).join(' ; ');
+  const say = [head && `${head}, ça fait ${plural(c, 'centaine')}`, rest && `${rest}, c'est ${r}`].filter(Boolean).join('. ');
+  return { show: `${show} 👇`, say: `${say}. ${r ? '' : 'Pas de dizaines ni d’unités : on écrit des zéros.'}`, html: `<div class="ex-line">${wordsSplitHTML(n)}</div>${cduTableHTML(n)}` };
+}
+
+// Tirer un nombre entre 101 et 999, avec parfois un zéro au milieu ou à la fin
+function pickHundred() {
+  const k = Math.random();
+  const c = rand(1, 9);
+  if (k < 0.15) return c * 100 + rand(1, 9); // 305
+  if (k < 0.25) return c * 100 + rand(1, 9) * 10; // 340
+  return c * 100 + rand(11, 99);
+}
+
+// La cale : on charge des cubes, des barres de 10 (et des plaques de 100 pour les grands nombres)
+function renderVault(body, q, api) {
+  const big = q.n >= 100;
+  let c = 0;
+  let d = 0;
+  let u = 0;
+  let solved = false;
+  const el = h(`<div class="vault">
+    <div class="big-number">🎯 ${q.n}</div>
+    <div class="vault-box"><div class="blocks ${big ? 'hblocks vh' : 'large'}">${big ? '<div class="hundreds"></div>' : ''}<div class="tens"></div><div class="units"></div></div></div>
+    <div class="du ${big ? 'three' : ''}">
+      ${big ? '<div class="du-col c"><span>centaines</span><b class="ccount">0</b></div>' : ''}
+      <div class="du-col d"><span>dizaines</span><b class="dcount">0</b></div>
+      <div class="du-col u"><span>unités</span><b class="ucount">0</b></div>
+    </div>
+    <div class="vault-btns">
+      ${big ? `<button class="btn add-hundred"><span class="blocks mini">${HUNDRED}</span> + 100</button>` : ''}
+      <button class="btn add-ten"><span class="blocks mini">${TEN}</span> + 10</button>
+      <button class="btn add-unit"><span class="blocks mini">${UNIT}</span> + 1</button>
+    </div>
+    <div class="vault-btns">
+      <button class="btn ghost reset">↺ Vider</button>
+      <button class="btn go check">Lever l’ancre ⚓</button>
+    </div>
+    <p class="vault-tip">Touche un bloc dans la cale pour l’enlever.</p>
+  </div>`);
+  const box = el.querySelector('.vault-box');
+  const hundredsEl = el.querySelector('.vault-box .hundreds');
+  const tensEl = el.querySelector('.vault-box .tens');
+  const unitsEl = el.querySelector('.vault-box .units');
+  function draw(anim) {
+    if (hundredsEl) hundredsEl.innerHTML = HUNDRED.repeat(c);
+    tensEl.innerHTML = TEN.repeat(d);
+    unitsEl.innerHTML = UNIT.repeat(u);
+    if (big) el.querySelector('.ccount').textContent = c;
+    el.querySelector('.dcount').textContent = d;
+    el.querySelector('.ucount').textContent = u;
+    const last = { hundred: hundredsEl, ten: tensEl, unit: unitsEl, merge: tensEl, merge100: hundredsEl }[anim];
+    if (last && last.lastElementChild) last.lastElementChild.classList.add(anim.startsWith('merge') ? 'flash' : 'drop');
+  }
+  if (hundredsEl) hundredsEl.addEventListener('click', (e) => { if (!solved && e.target.closest('.hundred')) { c--; SFX.click(); draw(); } });
+  tensEl.addEventListener('click', (e) => { if (!solved && e.target.closest('.ten')) { d--; SFX.click(); draw(); } });
+  unitsEl.addEventListener('click', (e) => { if (!solved && e.target.closest('.unit')) { u--; SFX.click(); draw(); } });
+  const full = () => api.say('La cale est pleine !');
+  // 10 dizaines se collent en 1 centaine
+  function addTen(fromUnits) {
+    if (d < 9) { d++; return fromUnits ? 'merge' : 'ten'; }
+    if (!big || c >= 9) return null;
+    d = 0; c++;
+    return 'merge100';
+  }
+  if (big) {
+    el.querySelector('.add-hundred').addEventListener('click', () => {
+      if (solved) return;
+      if (c >= 9) { full(); return; }
+      c++; SFX.pop(); draw('hundred');
+    });
+  }
+  el.querySelector('.add-ten').addEventListener('click', () => {
+    if (solved) return;
+    if (d >= 9 && !big) { api.say('La cale est pleine de dizaines !'); return; }
+    const a = addTen(false);
+    if (!a) { full(); return; }
+    if (a === 'merge100') {
+      SFX.magic(); draw(a);
+      api.say('✨ 10 dizaines = 1 centaine ! Elles se sont collées en une plaque !');
+      speak('Dix dizaines, ça fait une centaine !');
+      return;
+    }
+    SFX.pop(); draw(a);
+  });
+  el.querySelector('.add-unit').addEventListener('click', () => {
+    if (solved) return;
+    if (u < 9) { u++; SFX.pop(); draw('unit'); return; }
+    const prev = [c, d];
+    const a = addTen(true);
+    if (!a) { [c, d] = prev; full(); return; }
+    u = 0; SFX.magic(); draw(a);
+    if (a === 'merge100') {
+      api.say('✨ 10 unités = 1 dizaine… et 10 dizaines = 1 centaine !');
+      speak('Dix unités font une dizaine, et dix dizaines font une centaine !');
+    } else {
+      api.say('✨ 10 unités = 1 dizaine ! Elles se sont collées !');
+      speak('Dix unités, ça fait une dizaine !');
+    }
+  });
+  el.querySelector('.reset').addEventListener('click', () => { if (!solved) { c = 0; d = 0; u = 0; SFX.click(); draw(); } });
+  el.querySelector('.check').addEventListener('click', () => {
+    if (solved) return;
+    const got = c * 100 + d * 10 + u;
+    if (got === q.n) {
+      solved = true;
+      box.classList.add('open');
+      SFX.unlock();
+      setTimeout(() => api.success(), 500);
+    } else {
+      restart(box, 'shake');
+      const what = big ? 'des blocs' : 'des cubes';
+      api.fail(`Tu as chargé ${got}. Il en faut ${q.n} ! ${got < q.n ? 'Ajoute' : 'Enlève'} ${what}.`, { c, d, u });
+    }
+  });
+  body.append(el);
+}
+
 // ================= Le bateau =================
 const boatEl = () => document.getElementById('boat');
 
@@ -821,72 +1050,92 @@ const ROOM_TYPES = {
         say: `Pour ${q.n}, il faut ${plural(N.d, 'barre')} de dix et ${plural(N.u, 'cube')}. Dans ta cale, il y a ${plural(d, 'barre')} et ${plural(u, 'cube')}, ça fait ${d * 10 + u}.`,
       };
     },
+    render: (body, q, api) => renderVault(body, q, api),
+  },
+
+  // 🔢 La cale avec des plaques de 100 (CE1)
+  coffre100: {
+    subject: 'maths',
+    make: () => ({ n: pickHundred() }),
+    instruction: (q) => `Charge exactement ${q.n} cubes dans la cale, puis lève l’ancre !`,
+    hint: (q) => ({ show: `${q.n} = ${cduText(q.n)}`, say: `${q.n}, c'est ${cduText(q.n)}.`, html: cduTableHTML(q.n) }),
+    explain(q, { c, d, u }) {
+      const N = cdu(q.n);
+      const got = c * 100 + d * 10 + u;
+      return {
+        show: `Pour ${q.n} : ${plural(N.c, 'plaque')} de 100, ${plural(N.d, 'barre')} de 10 et ${plural(N.u, 'cube')} 👇`,
+        html: `<div class="ex-pair">${numberCard3HTML(q.n, 'Il faut ✅')}${numberCard3HTML(got, 'Dans ta cale ❌')}</div>
+          <p class="ex-note">Le 1er chiffre dit combien de <b class="ex-c">plaques de 100</b>, le 2e combien de <b class="ex-d">barres de 10</b>, le 3e combien de <b class="ex-u">cubes</b>.</p>`,
+        say: `Pour ${q.n}, il faut ${plural(N.c, 'plaque')} de cent, ${plural(N.d, 'barre')} de dix et ${plural(N.u, 'cube')}. Dans ta cale, ça fait ${got}.`,
+      };
+    },
+    render: (body, q, api) => renderVault(body, q, api),
+  },
+
+  // 🔢 Centaines : blocs / texte -> nombre, ou nombre -> tableau C D U (CE1)
+  centaines: {
+    subject: 'maths',
+    make() {
+      const n = pickHundred();
+      const k = Math.random();
+      const kind = k < 0.4 ? 'blocs' : k < 0.7 ? 'texte' : 'tableau';
+      const order = kind === 'texte' && Math.random() < 0.4 ? shuffle(['c', 'd', 'u']) : ['c', 'd', 'u'];
+      return { n, kind, order, options: hundredOptions(n, kind === 'tableau' ? 3 : 4) };
+    },
+    instruction: (q) => ({
+      blocs: 'Compte les plaques de 100, les barres de 10 et les cubes. Quelle île a le bon nombre ?',
+      texte: 'Lis bien, puis navigue vers le bon nombre !',
+      tableau: `Quelle île range bien le nombre ${q.n} ?`,
+    })[q.kind],
+    hint: (q) => (q.kind === 'tableau'
+      ? { show: 'Le 1er chiffre, ce sont les centaines, puis les dizaines, puis les unités ✋', say: 'Le premier chiffre, ce sont les centaines. Ensuite les dizaines, puis les unités.' }
+      : { show: 'Une plaque = 100, une barre = 10, un cube = 1. Écris les centaines, puis les dizaines, puis les unités.', say: 'Une plaque vaut cent, une barre vaut dix, un cube vaut un. On écrit les centaines, puis les dizaines, puis les unités.' }),
+    explain: (q, w) => explainNumber3(q.n, w),
     render(body, q, api) {
-      let d = 0;
-      let u = 0;
-      let solved = false;
-      const el = h(`<div class="vault">
-        <div class="big-number">🎯 ${q.n}</div>
-        <div class="vault-box"><div class="blocks large"><div class="tens"></div><div class="units"></div></div></div>
-        <div class="du">
-          <div class="du-col d"><span>dizaines</span><b class="dcount">0</b></div>
-          <div class="du-col u"><span>unités</span><b class="ucount">0</b></div>
-        </div>
-        <div class="vault-btns">
-          <button class="btn add-ten"><span class="blocks mini"><span class="ten">${'<i></i>'.repeat(10)}</span></span> + 10</button>
-          <button class="btn add-unit"><span class="blocks mini"><i class="unit"></i></span> + 1</button>
-        </div>
-        <div class="vault-btns">
-          <button class="btn ghost reset">↺ Vider</button>
-          <button class="btn go check">Lever l’ancre ⚓</button>
-        </div>
-        <p class="vault-tip">Touche un bloc dans la cale pour l’enlever.</p>
-      </div>`);
-      const box = el.querySelector('.vault-box');
-      const tensEl = el.querySelector('.vault-box .tens');
-      const unitsEl = el.querySelector('.vault-box .units');
-      function draw(anim) {
-        tensEl.innerHTML = Array.from({ length: d }, () => `<span class="ten">${'<i></i>'.repeat(10)}</span>`).join('');
-        unitsEl.innerHTML = '<i class="unit"></i>'.repeat(u);
-        el.querySelector('.dcount').textContent = d;
-        el.querySelector('.ucount').textContent = u;
-        if (anim === 'ten' && tensEl.lastElementChild) tensEl.lastElementChild.classList.add('drop');
-        if (anim === 'unit' && unitsEl.lastElementChild) unitsEl.lastElementChild.classList.add('drop');
-        if (anim === 'merge' && tensEl.lastElementChild) tensEl.lastElementChild.classList.add('flash');
+      if (q.kind === 'tableau') {
+        body.append(h(`<div class="big-number">${q.n}</div>`));
+        buildIslands(body, q.options.map((o) => ({ correct: o === q.n, value: o, html: cduTableHTML(o, 'isle') })), api);
+        return;
       }
-      tensEl.addEventListener('click', (e) => { if (!solved && e.target.closest('.ten')) { d--; SFX.click(); draw(); } });
-      unitsEl.addEventListener('click', (e) => { if (!solved && e.target.closest('.unit')) { u--; SFX.click(); draw(); } });
-      el.querySelector('.add-ten').addEventListener('click', () => {
-        if (solved) return;
-        if (d >= 9) { api.say('La cale est pleine de dizaines !'); return; }
-        d++; SFX.pop(); draw('ten');
-      });
-      el.querySelector('.add-unit').addEventListener('click', () => {
-        if (solved) return;
-        if (u === 9) {
-          if (d >= 9) { api.say('La cale est pleine !'); return; }
-          u = 0; d++; SFX.magic(); draw('merge');
-          api.say('✨ 10 unités = 1 dizaine ! Elles se sont collées !');
-          speak('Dix unités, ça fait une dizaine !');
-          return;
-        }
-        u++; SFX.pop(); draw('unit');
-      });
-      el.querySelector('.reset').addEventListener('click', () => { if (!solved) { d = 0; u = 0; SFX.click(); draw(); } });
-      el.querySelector('.check').addEventListener('click', () => {
-        if (solved) return;
-        const got = d * 10 + u;
-        if (got === q.n) {
-          solved = true;
-          box.classList.add('open');
-          SFX.unlock();
-          setTimeout(() => api.success(), 500);
-        } else {
-          restart(box, 'shake');
-          api.fail(`Tu as chargé ${got}. Il en faut ${q.n} ! ${got < q.n ? 'Ajoute' : 'Enlève'} des cubes.`, { d, u });
-        }
-      });
-      body.append(el);
+      body.append(q.kind === 'texte'
+        ? h(`<div class="sentence">${cduText(q.n, q.order)}</div>`)
+        : h(`<div class="blocks-card">${hBlocksHTML(q.n, 'big')}</div>`));
+      buildIslands(body, q.options.map((o) => ({ correct: o === q.n, value: o, html: `<div class="isle-number">${o}</div>` })), api);
+    },
+  },
+
+  // 🔢 Nombre écrit en lettres <-> en chiffres (CE1)
+  lettres: {
+    subject: 'maths',
+    make() {
+      const n = pickHundred();
+      const toWords = Math.random() < 0.4;
+      return { n, toWords, options: hundredOptions(n, toWords ? 3 : 4, !toWords) };
+    },
+    instruction: (q) => (q.toWords ? `Comment s’écrit ${q.n} en lettres ? Navigue vers la bonne île !` : 'Lis le nombre écrit en lettres. Quelle île l’écrit en chiffres ?'),
+    hint: (q) => wordsHint(q.n),
+    explain(q, w) {
+      if (!q.toWords) {
+        const ex = explainNumber3(q.n, w);
+        return Object.assign(ex, { html: `<div class="ex-line">${wordsSplitHTML(q.n)}</div>${cduTableHTML(q.n)}${ex.html}`, say: `${wordsHint(q.n).say} ${ex.say}` });
+      }
+      return {
+        show: `${q.n}, ça se lit « ${numberWords(q.n)} » 👇`,
+        html: `<div class="ex-pair">
+          <div class="ex-word"><small>Le bon ✅</small><div class="ex-digits">${digits3HTML(q.n)}</div><span class="ex-nw">${wordsSplitHTML(q.n)}</span></div>
+          <div class="ex-word"><small>Ton choix ❌</small><div class="ex-digits">${digits3HTML(w)}</div><span class="ex-nw">${wordsSplitHTML(w)}</span></div>
+        </div><p class="ex-note">On lit d’abord les centaines, puis le reste.</p>`,
+        say: `${q.n}, ça se lit ${numberWords(q.n)}. Toi, tu as choisi ${numberWords(w)}, c'est le nombre ${w}.`,
+      };
+    },
+    render(body, q, api) {
+      if (q.toWords) {
+        body.append(h(`<div class="big-number">${q.n}</div>`));
+        buildIslands(body, q.options.map((o) => ({ correct: o === q.n, value: o, html: `<div class="isle-words">${numberWords(o)}</div>` })), api);
+        return;
+      }
+      body.append(h(`<div class="sentence num-words">${numberWords(q.n)}</div>`));
+      buildIslands(body, q.options.map((o) => ({ correct: o === q.n, value: o, html: `<div class="isle-number ${o > 999 ? 'long' : ''}">${o}</div>` })), api);
     },
   },
 
@@ -1170,6 +1419,8 @@ function wordMastery(w) {
   return st.ko > st.ok ? 'hard' : 'learning';
 }
 const MATHS_TYPES = ['dizaines', 'blocs', 'coffre', 'calcul', 'ordre'];
+// CE1 : les centaines (manipulation, tableau C D U, nombres en lettres)
+const HUNDRED_TYPES = ['centaines', 'lettres', 'coffre100', 'lettres'];
 
 // Tire des types en évitant les répétitions trop rapprochées
 function drawer(types) {
@@ -1184,7 +1435,7 @@ const PLURAL_TYPES = ['indices'];
 
 function buildSequence(mode, count) {
   const r = drawer(S.level === 'CE1' ? READING_TYPES.concat(PLURAL_TYPES) : READING_TYPES);
-  const m = drawer(MATHS_TYPES);
+  const m = drawer(S.level === 'CE1' ? MATHS_TYPES.concat(HUNDRED_TYPES) : MATHS_TYPES);
   const seq = Array.from({ length: count }, (_, i) => {
     if (mode === 'lecture') return r();
     if (mode === 'maths') return m();
