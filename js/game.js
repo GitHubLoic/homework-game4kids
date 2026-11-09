@@ -1596,33 +1596,40 @@ function isUnlocked(i) {
 
 function renderMap() {
   setTheme(null);
+  document.getElementById('decor').innerHTML = '';
   const max = STEPS_PER_WORLD * 3;
   const nextIdx = WORLDS.findIndex((w, i) => isUnlocked(i) && !(S.worlds[w.id] || {}).done);
+  const destination = WORLDS[nextIdx < 0 ? 0 : nextIdx];
   app.innerHTML = `<section class="map">
     <header class="map-head">
       <button class="icon-btn" id="btn-home" title="Réglages">⚙️</button>
       <div class="hello"><span class="hello-av">${boatSVG(S.boat)}</span> Ahoy ${esc(S.name || 'moussaillon')} !</div>
-      <div class="star-count">⭐ ${totalStars()}</div>
+      <div class="star-count">⭐ ${totalStars()} <span>étoiles</span></div>
     </header>
+    <div class="chart-title"><span class="chart-eyebrow">LE GRAND VOYAGE</span><h1>Les Îles <span>Magiques</span></h1><p>Cinq mers, mille découvertes. À toi l’aventure !</p></div>
+    <div class="archipelago" aria-label="Carte des cinq mers">
+    ${chartScenery()}
+    <div class="chart-boat" aria-hidden="true">${boatSVG(S.boat)}<span>Ton bateau</span></div>
+    <div class="worlds">${WORLDS.map((w, i) => {
+      const prog = S.worlds[w.id] || {};
+      const open = isUnlocked(i);
+      return `<button class="world-card ${open ? '' : 'locked'} ${i === nextIdx ? 'next' : ''}" data-i="${i}" aria-label="${w.name} — ${open ? (prog.done ? 'Voyage terminé' : 'À explorer') : 'Termine la mer précédente pour ouvrir cette île'}" aria-disabled="${!open}" style="--c1:${w.c1};--c2:${w.c2};--i:${i}">
+        <span class="island-status">${prog.done ? '✓ Explorée' : i === nextIdx ? '⚑ Ton prochain voyage' : open ? 'À explorer' : '🔒 À découvrir'}</span>
+        ${islandArt(w.id)}
+        <span class="w-name">${w.name}</span>
+        <span class="w-stars">${open ? (prog.done ? `⭐ ${prog.best} / ${max}` : 'L’aventure commence ici') : 'Termine la mer d’avant'}</span>
+      </button>`;
+    }).join('')}</div>
+    </div>
+    <div class="chart-departure">${profSays('Prêt pour de nouvelles découvertes, capitaine ?')}<button class="btn big chart-continue" id="btn-continue">${nextIdx < 0 ? 'Repartir à l’aventure' : 'Continuer l’aventure'} <span aria-hidden="true">➜</span></button><span class="chart-destination">Cap sur ${esc(destination.name)} !</span></div>
     ${dailyWords().length ? `<div class="words-board">
       <b>📚 Mes mots du jour</b>
       <div class="word-chips">${dailyWords().map((w) => `<span class="wchip ${wordMastery(w)}">${esc(w)}</span>`).join('')}</div>
       <small><span class="wchip good">bien su</span> <span class="wchip learning">en cours</span> <span class="wchip hard">à revoir</span></small>
     </div>` : ''}
-    ${profSays(esc(profLine('map')))}
-    <h2>Choisis ta mer</h2>
-    <div class="worlds">${WORLDS.map((w, i) => {
-      const prog = S.worlds[w.id] || {};
-      const open = isUnlocked(i);
-      return `<button class="world-card ${open ? '' : 'locked'} ${i === nextIdx ? 'next' : ''}" data-i="${i}" style="--c1:${w.c1};--c2:${w.c2};--i:${i}">
-        <span class="w-emoji">${w.emoji}</span>
-        <span class="w-name">${w.name}</span>
-        <span class="w-stars">${open ? (prog.done ? `⭐ ${prog.best} / ${max}` : 'À explorer !') : 'Termine la mer d’avant'}</span>
-        <span class="w-reward">${open ? (prog.done ? w.reward : '❔') : '🔒'}</span>
-      </button>`;
-    }).join('')}</div>
   </section>`;
   app.querySelector('#btn-home').addEventListener('click', () => { SFX.click(); renderHome(); });
+  app.querySelector('#btn-continue').addEventListener('click', () => { SFX.good(); startWorld(destination); });
   app.querySelectorAll('.world-card').forEach((c) => c.addEventListener('click', () => {
     const i = Number(c.dataset.i);
     if (!isUnlocked(i)) {
@@ -1692,7 +1699,7 @@ function startWorld(w) {
   RUN = run;
   setTheme(w);
   document.getElementById('decor').innerHTML = '';
-  app.innerHTML = `<section class="voyage-screen">
+  app.innerHTML = `<section class="voyage-screen marine-voyage">
     <div id="zone-wrap"></div>
     <header class="topbar">
       <button class="icon-btn" id="btn-map" title="Carte">🗺️</button>
@@ -1701,6 +1708,7 @@ function startWorld(w) {
       <div class="star-count" id="run-stars">⭐ 0</div>
       <button class="icon-btn" id="btn-sound" title="Son"></button>
     </header>
+    <div class="voyage-caption"><span>LE CARNET D’AVENTURE</span><b>${esc(w.name)}</b></div>
     <main class="stage away" id="stage"></main>
     <div class="boat" id="boat"><span class="wake"></span>${boatSVG(S.boat)}</div>
   </section>`;

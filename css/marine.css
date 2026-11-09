@@ -1,0 +1,118 @@
+/* Dessin animé marin — carte et carnet d'exercices. */
+.map, .marine-voyage { --marine-ink: #193858; --card: #fffaf0; color: var(--marine-ink); }
+.map {
+  min-height: 100dvh; padding: 20px 28px 36px; overflow: hidden;
+  background: radial-gradient(ellipse at 50% 22%, #8ce8e5 0, transparent 52%), linear-gradient(#35bed3, #1aa6c7 65%, #178db5);
+}
+.map-head { max-width: 1180px; }
+.map .hello { font-size: 21px; text-shadow: 0 2px #117793; }
+.map .hello-av { width: 42px; }
+.map .icon-btn, .marine-voyage .icon-btn { border: 2px solid var(--marine-ink); background: #fffaf0; box-shadow: 0 3px 0 #193858; }
+.map .star-count, .marine-voyage .star-count { border: 2px solid var(--marine-ink); background: #fff4ce; box-shadow: 0 3px 0 #193858; font-size: 20px; }
+.map .star-count span { font-size: 16px; }
+.chart-title { position: relative; z-index: 1; text-align: center; margin: 12px auto 0; }
+.chart-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .24em; color: #174f6b; }
+.chart-title h1 { font-size: clamp(38px, 5.2vw, 66px); line-height: 1.05; margin: 8px 0; color: #fffaf0; -webkit-text-stroke: 2px #193858; paint-order: stroke fill; text-shadow: 0 4px #193858; }
+.chart-title h1 span { color: #ffda64; }
+.chart-title p { margin: 12px 0 0; font-size: 17px; color: #143f58; }
+.archipelago { position: relative; max-width: 1100px; height: 580px; margin: 14px auto -10px; }
+.chart-scenery { position: absolute; width: 100%; height: 100%; inset: 0; pointer-events: none; }
+.chart-route { fill: none; stroke: #e7ffff; stroke-width: 4; stroke-dasharray: 5 12; stroke-linecap: round; opacity: .8; }
+.map .worlds { display: block; position: relative; height: 100%; max-width: none; padding: 0; }
+.map .world-card {
+  position: absolute; width: 29%; min-height: 0; padding: 0; border-radius: 30px; border: 0;
+  background: transparent; box-shadow: none; color: #193858; text-align: center;
+  display: flex; align-items: center; gap: 0; animation: none;
+  transition: transform .2s; isolation: isolate;
+}
+.map .world-card:nth-child(1) { left: 2%; top: 5%; }
+.map .world-card:nth-child(2) { left: 35.5%; top: 0; }
+.map .world-card:nth-child(3) { right: 1%; top: 6%; }
+.map .world-card:nth-child(4) { left: 15%; top: 48%; }
+.map .world-card:nth-child(5) { right: 13%; top: 48%; }
+.map .world-card:hover { transform: translateY(-6px); }
+.island-art { width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 9px 7px #126c8c35); }
+.map .w-name { max-width: 96%; font-size: clamp(16px, 1.9vw, 23px); text-shadow: none; background: #fff1c9; border: 2px solid #193858; border-radius: 12px; padding: 7px 14px; margin-top: -21px; box-shadow: 0 3px 0 #193858; transform: rotate(-2deg); }
+.map .w-stars { font-size: 13px; font-weight: 500; margin-top: 9px; color: #123f56; opacity: 1; }
+.map .world-card.locked { filter: none; cursor: pointer; }
+.map .locked .island-art { opacity: .78; }
+.map .locked .w-name { background: #e7f2e9; }
+.map .world-card.next { outline: none; }
+.island-status { position: absolute; top: 6px; z-index: 1; border-radius: 20px; padding: 5px 10px; background: #e0f9f4; font-size: 11px; font-weight: 600; border: 1px solid #30728a; }
+.next .island-status { background: #ffdc64; border: 2px solid #193858; transform: rotate(-4deg); }
+.chart-boat { position: absolute; z-index: 1; width: 10%; left: 46%; top: 45%; text-align: center; pointer-events: none; }
+.chart-boat .boat-svg { width: 100%; filter: drop-shadow(0 5px 0 #12688255); animation: rock 3s ease-in-out infinite; }
+.chart-boat span { font-size: 11px; color: #164d69; background: #c2f4ee; border-radius: 20px; padding: 3px 9px; white-space: nowrap; }
+.chart-departure { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 8px 36px; align-items: center; max-width: 960px; margin: 0 auto 28px; }
+.chart-departure .prof-talk { grid-row: 1 / 3; width: 100%; }
+.chart-departure .prof-wrap { width: 100px; }
+.chart-departure .bubble { font-size: 18px; border: 2px solid #193858; box-shadow: 0 4px 0 #193858; }
+.chart-continue { background: #ffdc58; border: 3px solid #193858; box-shadow: 0 5px 0 #193858, inset 0 3px #fff5ac; font-size: 23px !important; padding: 16px 24px !important; }
+.chart-continue:hover { background: #ffe57c; transform: translateY(-2px); }
+.chart-continue:active { transform: translateY(3px); box-shadow: 0 2px 0 #193858; }
+.chart-destination { text-align: center; font-size: 13px; }
+.map .words-board { max-width: 960px; margin: 0 auto; background: #fffaf0; border: 2px solid #193858; box-shadow: 0 4px 0 #193858; }
+.map button:focus-visible, .marine-voyage button:focus-visible { outline: 4px solid #fff; outline-offset: 5px; box-shadow: 0 0 0 8px #193858; }
+
+/* La lecture se fait sur un panneau calme, au-dessus du décor marin. */
+.marine-voyage .topbar { background: #fffaf0f5; border-bottom: 3px solid #193858; backdrop-filter: none; gap: 14px; }
+.marine-voyage .track-line { background: repeating-linear-gradient(90deg, #92bbc7 0 10px, transparent 10px 18px); }
+.marine-voyage .node { border: 2px solid #193858; box-shadow: 0 2px #193858; }
+.marine-voyage .node.chest-node { border: 0; box-shadow: none; }
+.voyage-caption { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 22px 12px 4px; color: #193858; }
+.voyage-caption span { font-size: 11px; font-weight: 700; letter-spacing: .19em; background: #fffaf0; padding: 5px 10px; border-radius: 12px; }
+.voyage-caption b { font-size: 23px; color: #fffaf0; text-shadow: 0 2px #193858; -webkit-text-stroke: 1px #193858; paint-order: stroke fill; }
+.marine-voyage .stage { max-width: 960px; }
+.marine-voyage .room { gap: 18px; padding: 20px 22px 34px; background: #fffaf0f7; border: 3px solid #193858; border-radius: 30px; box-shadow: 0 7px 0 #193858, 0 16px 35px #124e6c26; }
+.marine-voyage .guide { width: 100%; padding-bottom: 12px; border-bottom: 2px dashed #e3d7b9; }
+.marine-voyage .guide-face { width: 76px; animation: none; }
+.marine-voyage .bubble { background: #edf7f5; border: 2px solid #a2c9cb; box-shadow: none; font-size: 20px; }
+.marine-voyage .bubble::before { border-right-color: #a2c9cb; }
+.marine-voyage .sentence, .marine-voyage .blocks-card { background: #fff; border: 2px solid #d7e7e3; box-shadow: 0 3px 0 #d7e7e3; }
+.marine-voyage .islands { width: 100%; gap: clamp(14px, 3vw, 32px); padding: 12px 0; }
+.marine-voyage .island { animation: islandRise .6s backwards; }
+.marine-voyage .isle-card { background: #fff8e4; border: 2px solid #193858; box-shadow: 0 4px 0 #193858; }
+.marine-voyage .isle-land { border: 2px solid #193858; animation: none; box-shadow: 0 4px 0 #b5e8e7; }
+.marine-voyage .big-number { color: #193858; -webkit-text-stroke: 0; text-shadow: none; }
+.marine-voyage .big-emoji { animation: pop .45s; }
+.marine-voyage .round-btn { border: 2px solid #193858; background: #ffdc64; min-width: 42px; }
+.marine-voyage .zone .deco { opacity: .65; }
+.marine-voyage .zone .deco, .marine-voyage .waves { animation-play-state: paused; }
+.marine-voyage .island.won .isle-card { background: #e1f8dd; box-shadow: 0 4px 0 #193858, 0 0 0 4px #ffd23f; }
+@media (max-width: 700px) {
+  .map { padding: 16px 12px 28px; }
+  .map .hello { font-size: 16px; }
+  .map .hello-av { display: none; }
+  .map .star-count { padding: 8px 10px; font-size: 17px; }
+  .map .star-count span { display: none; }
+  .chart-title { margin-top: 24px; }
+  .chart-title p { font-size: 14px; }
+  .archipelago { height: auto; margin: 18px auto 24px; }
+  .map .worlds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 10px; padding-top: 12px; }
+  .map .world-card { position: relative; inset: auto !important; width: 100%; justify-content: flex-end; }
+  .map .world-card:last-child { grid-column: 1 / -1; width: 52%; justify-self: center; }
+  .map .w-name { padding: 7px 8px; font-size: 16px; margin-top: -13px; }
+  .map .w-stars { font-size: 11px; }
+  .island-status { top: -10px; font-size: 10px; padding: 4px 7px; }
+  .chart-boat { display: none; }
+  .chart-departure { grid-template-columns: 1fr; gap: 12px; padding: 0 10px; }
+  .chart-departure .prof-talk { grid-row: auto; max-width: none; }
+  .chart-departure .prof-wrap { width: 72px; }
+  .chart-departure .bubble { font-size: 16px; }
+  .chart-continue { width: 100%; font-size: 22px !important; }
+  .marine-voyage .topbar { gap: 6px; padding: 8px; }
+  .marine-voyage .topbar .star-count { font-size: 16px; padding: 7px; }
+  .marine-voyage .track { margin: 0 12px; }
+  .marine-voyage .icon-btn { width: 42px; height: 42px; }
+  .marine-voyage .room { padding: 14px 10px 26px; border-radius: 24px; }
+  .marine-voyage .guide { gap: 8px; }
+  .marine-voyage .guide-face { width: 50px; }
+  .marine-voyage .bubble { font-size: 17px; padding: 10px; flex-wrap: wrap; }
+  .marine-voyage .bubble-text { min-width: 100%; }
+  .marine-voyage .stage { padding-left: 8px; padding-right: 8px; }
+  .marine-voyage .islands { --cw: clamp(100px, 34vw, 150px); gap: 18px; }
+  .marine-voyage .islands.n4 { --cw: clamp(100px, 34vw, 150px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .map *, .marine-voyage * { animation: none !important; transition: none !important; }
+}
