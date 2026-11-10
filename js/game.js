@@ -1599,11 +1599,16 @@ function isUnlocked(i) {
   return i === 0 || !!(S.worlds[WORLDS[i - 1].id] || {}).done;
 }
 
+function mapWorldState(i) {
+  if (!isUnlocked(i)) return 'locked';
+  return (S.worlds[WORLDS[i].id] || {}).done ? 'completed' : 'open';
+}
+
 function renderMap() {
   setTheme(null);
   document.getElementById('decor').innerHTML = '';
   const max = STEPS_PER_WORLD * 3;
-  const nextIdx = WORLDS.findIndex((w, i) => isUnlocked(i) && !(S.worlds[w.id] || {}).done);
+  const nextIdx = WORLDS.findIndex((w, i) => mapWorldState(i) === 'open');
   const destination = WORLDS[nextIdx < 0 ? 0 : nextIdx];
   app.innerHTML = `<section class="map illustrated-map">
     <header class="map-head">
@@ -1612,16 +1617,21 @@ function renderMap() {
       <div class="star-count">⭐ ${totalStars()} <span>étoiles</span></div>
     </header>
     <div class="chart-title"><h1>Les Îles <span>Magiques</span></h1><span class="title-star" aria-hidden="true">★</span></div>
+    <p class="chart-direction">Départ au niveau 1, puis on remonte les îles ↑</p>
     <div class="archipelago" aria-label="Carte des cinq mers">
     ${chartScenery()}
     <div class="chart-boat" aria-hidden="true">${boatSVG(S.boat)}</div>
     <div class="worlds">${WORLDS.map((w, i) => {
       const prog = S.worlds[w.id] || {};
-      const open = isUnlocked(i);
-      return `<button class="world-card ${open ? '' : 'locked'} ${i === nextIdx ? 'next' : ''}" data-i="${i}" aria-label="${w.name} — ${open ? (prog.done ? 'Voyage terminé' : 'À explorer') : 'Termine la mer précédente pour ouvrir cette île'}" aria-disabled="${!open}" style="--c1:${w.c1};--c2:${w.c2};--i:${i}">
+      const state = mapWorldState(i);
+      const open = state !== 'locked';
+      const status = !open ? '🔒 Fermé' : state === 'completed' ? 'Ouvert · Rejouer' : 'Ouvert · Commencer';
+      const requirement = !open ? `Termine ${CHART_LABELS[WORLDS[i - 1].id]}` : '';
+      return `<button class="world-card ${open ? '' : 'locked'} ${i === nextIdx ? 'next' : ''}" data-i="${i}" data-world="${w.id}" data-state="${state}" aria-label="Niveau ${i + 1} : ${w.name} — ${open ? status : requirement}" aria-describedby="world-status-${w.id}" aria-disabled="${!open}" ${open ? '' : 'disabled'} style="--c1:${w.c1};--c2:${w.c2};--i:${i}">
         ${islandArt(w.id)}
-        <span class="w-name">${CHART_LABELS[w.id]}</span>
-        <span class="island-status">${prog.done ? `★ ${prog.best} / ${max}` : i === nextIdx ? 'Prochaine escale' : open ? 'À explorer' : '🔒 À découvrir'}</span>
+        <span class="w-name"><small>Niveau ${i + 1}</small>${CHART_LABELS[w.id]}</span>
+        <span class="island-status" id="world-status-${w.id}">${status}</span>
+        ${!open ? `<span class="world-requirement">${requirement}</span>` : state === 'completed' ? `<span class="world-progress">★ ${prog.best || 0} / ${max}</span>` : ''}
       </button>`;
     }).join('')}</div>
     </div>
@@ -1652,6 +1662,12 @@ function renderMap() {
     SFX.good();
     startWorld(WORLDS[i]);
   }));
+  const map = app.querySelector('.map');
+  requestAnimationFrame(() => {
+    if (!map.isConnected || innerWidth > 700) return;
+    const next = map.querySelector('.world-card.next') || map.querySelector('.world-card:not(:disabled)');
+    if (next) next.scrollIntoView({ block: 'center', behavior: 'auto' });
+  });
 }
 
 // ================= Le voyage dans une mer =================
