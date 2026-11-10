@@ -584,7 +584,7 @@ function islandsRow(count) {
 function islandEl(html, i) {
   return h(`<button class="island" style="--i:${i}" aria-label="Île ${i + 1}">
     <span class="isle-sign"><span class="isle-card">${html}</span><span class="isle-post"></span></span>
-    <span class="isle-land"><span class="isle-top l">${pick(RUN.zone.tops)}</span><span class="isle-top r">${pick(RUN.zone.tops)}</span></span>
+    <span class="isle-land"><img class="answer-island-art" src="assets/marine/${RUN.w.id}.webp" alt="" aria-hidden="true" draggable="false"></span>
   </button>`);
 }
 
@@ -1459,43 +1459,47 @@ function renderHome() {
   setTheme(null);
   const seg = (key, opts) => `<div class="seg" data-key="${key}">${opts.map(([v, label]) =>
     `<button data-v="${v}" class="${S[key] === v ? 'sel' : ''}">${label}</button>`).join('')}</div>`;
-  app.innerHTML = `<section class="home">
-    <div class="home-icons">⛵🏝️🧭</div>
-    <h1 class="title">Les Îles<br><span>Magiques</span></h1>
-    <p class="subtitle">Navigue d’île en île pour trouver les trésors !</p>
-    ${profSays(esc(profLine('hello')), 'happy')}
-    <div class="card setup">
-      <label class="field"><span>Ton prénom</span><input id="name" maxlength="14" autocomplete="off" value="${esc(S.name)}"></label>
-      <div class="field"><span>🗣️ Ça se prononce <small>(écris-le comme ça se dit)</small></span>
-        <div class="voice-pick"><input id="name-say" maxlength="20" autocomplete="off" value="${esc(S.nameSay)}" placeholder="${esc(S.name)}"><button class="seg-btn test-name" type="button">▶️ Écouter</button></div>
+  document.getElementById('decor').innerHTML = '';
+  app.innerHTML = `<section class="home art-home">
+    <header class="home-nav"><a class="home-brand" href="#">${nauticalIcon('compass')} <span>Les Îles Magiques</span></a><button class="btn ghost home-map" type="button">Ma carte ${nauticalIcon('arrow')}</button></header>
+    <div class="home-hero">
+      <div class="hero-copy"><span class="eyebrow">UNE PETITE AVENTURE, CHAQUE JOUR</span>
+        <h1 class="title">De grandes<br>découvertes.<br><span>À ton rythme.</span></h1>
+        <p class="subtitle">Un bateau, cinq mers et plein de trésors.<br>Apprendre devient une aventure !</p>
+        <div class="home-actions"><button class="btn big go-btn">C’est parti ! ${nauticalIcon('arrow')}</button><a class="prepare-link" href="#preparation">Préparer mon voyage ${nauticalIcon('settings')}</a></div>
+        <div class="hero-guide">${profSays(esc(profLine('hello')), 'happy')}</div>
       </div>
-      <div class="field"><span>Ton bateau</span>
-        <div class="boat-maker">
-          <div class="boat-preview"><div class="mini-sea"></div>${boatSVG(S.boat)}</div>
-          <div class="boat-opts">
-            <div class="opt-row" data-k="pattern"><em>Voile</em><span class="opt-list chips">${BOAT_OPTIONS.pattern.map(([v, l]) =>
-              `<button class="chip ${S.boat.pattern === v ? 'sel' : ''}" data-v="${v}">${l}</button>`).join('')}</span></div>
-            ${[['hull', 'Coque'], ['sail', 'Tissu']].map(([k, l]) => `<div class="opt-row" data-k="${k}"><em>${l}</em><span class="opt-list swatches">${BOAT_OPTIONS[k].map((c) =>
-              `<button class="swatch ${S.boat[k] === c ? 'sel' : ''}" data-v="${c}" style="background:${c}" aria-label="${l}"></button>`).join('')}</span></div>`).join('')}
-          </div>
-        </div>
-      </div>
-      <div class="field"><span>Ta classe</span>${seg('level', [['CP', 'CP'], ['CE1', 'CE1']])}</div>
-      <label class="field"><span>📚 Mots du jour à travailler <small>(séparés par des espaces)</small></span>
-        <textarea id="daily" rows="3" spellcheck="false">${esc(dailyWords().join(' '))}</textarea>
-      </label>
-      <div class="field"><span>Les épreuves</span>${seg('mode', [['mix', '🎲 Tout'], ['lecture', '📖 Lecture'], ['maths', '🔢 Maths']])}</div>
-      <div class="field"><span>Ton professeur</span>
-        <div class="prof-pick">${Object.entries(PROFS).map(([id, p]) => `<button class="prof-card ${S.prof === id ? 'sel' : ''}" data-id="${id}">
-          <span class="prof-mini">${profSVG('idle', id)}</span><b>${p.name}</b><small>${p.desc}</small></button>`).join('')}</div>
-        <div class="voice-pick"><select id="voice-name" aria-label="Voix du professeur"></select><button class="seg-btn test-voice" type="button">▶️ Écouter</button></div>
-      </div>
-      <div class="field"><span>Le son</span>${seg('sound', [[true, '🔔 Bruitages'], [false, '🔕 Sans bruitages']])}${seg('voice', [[true, '🗣️ Voix qui lit'], [false, '🤫 Sans voix']])}
-        <div class="voice-pick"><button class="seg-btn test-sound" type="button">🔊 Tester le son</button></div>
-        <small class="sound-report hidden"></small>
-      </div>
+      <div class="hero-art" aria-hidden="true"><img class="hero-island" src="assets/marine/tropical.webp" alt="" width="1448" height="1086"><div class="hero-boat">${boatSVG(S.boat)}</div><span class="hero-stamp">La curiosité<br>nous fait grandir ${nauticalIcon('star')}</span></div>
     </div>
-    <button class="btn big pulse go-btn">Larguer les amarres ! ⛵</button>
+    <div class="preparation-head" id="preparation"><span class="eyebrow">L’ATELIER DU CAPITAINE</span><h2>On prépare ton voyage ?</h2><p>Choisis ton équipage et personnalise ton aventure.</p></div>
+    <div class="setup">
+      <fieldset class="setup-section captain-settings"><legend>${nauticalIcon('compass')} Le capitaine, c’est toi</legend>
+        <label class="field"><span>Ton prénom</span><input id="name" maxlength="14" autocomplete="off" value="${esc(S.name)}"></label>
+        <div class="field"><span>Ça se prononce <small>(écris-le comme ça se dit)</small></span><div class="voice-pick"><input id="name-say" maxlength="20" autocomplete="off" value="${esc(S.nameSay)}" placeholder="${esc(S.name)}"><button class="seg-btn test-name" type="button">▶ Écouter</button></div></div>
+        <div class="field"><span>Ta classe</span>${seg('level', [['CP', 'CP'], ['CE1', 'CE1']])}</div>
+      </fieldset>
+      <fieldset class="setup-section boat-settings"><legend>${nauticalIcon('anchor')} Ton navire</legend>
+        <div class="boat-maker"><div class="boat-preview"><div class="mini-sea"></div>${boatSVG(S.boat)}</div><div class="boat-opts">
+          <div class="opt-row" data-k="pattern"><em>Voile</em><span class="opt-list chips">${BOAT_OPTIONS.pattern.map(([v, l]) => `<button class="chip ${S.boat.pattern === v ? 'sel' : ''}" data-v="${v}">${l}</button>`).join('')}</span></div>
+          ${[['hull', 'Coque'], ['sail', 'Tissu']].map(([k, l]) => `<div class="opt-row" data-k="${k}"><em>${l}</em><span class="opt-list swatches">${BOAT_OPTIONS[k].map((c) => `<button class="swatch ${S.boat[k] === c ? 'sel' : ''}" data-v="${c}" style="background:${c}" aria-label="${l} ${c}"></button>`).join('')}</span></div>`).join('')}
+        </div></div>
+      </fieldset>
+      <fieldset class="setup-section learning-settings"><legend>${nauticalIcon('book')} Tes découvertes</legend>
+        <label class="field"><span>Les mots du jour</span><small>Sépare les mots par des espaces.</small><textarea id="daily" rows="3" spellcheck="false">${esc(dailyWords().join(' '))}</textarea></label>
+        <div class="field"><span>Les épreuves</span>${seg('mode', [['mix', 'Tout explorer'], ['lecture', 'Lecture'], ['maths', 'Maths']])}</div>
+      </fieldset>
+      <fieldset class="setup-section crew-settings"><legend>${nauticalIcon('star')} Ton compagnon d’aventure</legend>
+        <div class="prof-pick">${Object.entries(PROFS).map(([id, p]) => `<button class="prof-card ${S.prof === id ? 'sel' : ''}" data-id="${id}"><span class="prof-mini">${profSVG('idle', id)}</span><b>${p.name}</b><small>${p.desc}</small></button>`).join('')}</div>
+        <details class="voice-settings"><summary>Choisir la voix du professeur</summary><div class="voice-pick"><select id="voice-name" aria-label="Voix du professeur"></select><button class="seg-btn test-voice" type="button">▶ Écouter</button></div></details>
+      </fieldset>
+      <fieldset class="setup-section sound-settings"><legend>${nauticalIcon('sound')} Le son à ta façon</legend>
+        <div class="field"><span>Les bruitages</span>${seg('sound', [[true, 'Avec'], [false, 'Sans']])}</div>
+        <div class="field"><span>La voix qui t’accompagne</span>${seg('voice', [[true, 'Avec'], [false, 'Sans']])}</div>
+        <button class="seg-btn test-sound" type="button">${nauticalIcon('sound')} Tester le son</button><small class="sound-report hidden"></small>
+      </fieldset>
+    </div>
+    <div class="home-bottom"><button class="btn big go-btn">Larguer les amarres ! ${nauticalIcon('arrow')}</button><p>Ton aventure est sauvegardée sur cet appareil.</p></div>
+    <footer class="game-footer">Les Îles Magiques <span>•</span> Un peu de magie, beaucoup de découvertes.<details><summary>Crédits des illustrations pédagogiques</summary><p>Pictogrammes Twemoji, Twitter et autres contributeurs, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.</p></details></footer>
   </section>`;
 
   app.querySelector('#name').addEventListener('input', (e) => { S.name = e.target.value.trim(); S.nameSay = ''; save();
@@ -1509,6 +1513,7 @@ function renderHome() {
     row.querySelectorAll('button').forEach((x) => x.classList.toggle('sel', x === b));
     const prev = app.querySelector('.boat-preview');
     prev.innerHTML = `<div class="mini-sea"></div>${boatSVG(S.boat)}`;
+    app.querySelector('.hero-boat').innerHTML = boatSVG(S.boat);
     restart(prev, 'happy');
   })));
   app.querySelectorAll('.seg').forEach((g) => g.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
@@ -1518,7 +1523,7 @@ function renderHome() {
     save(); SFX.click();
     g.querySelectorAll('button').forEach((x) => x.classList.toggle('sel', x === b));
   })));
-  app.querySelector('.go-btn').addEventListener('click', () => { SFX.good(); renderMap(); });
+  app.querySelectorAll('.go-btn, .home-map').forEach((button) => button.addEventListener('click', () => { SFX.good(); renderMap(); }));
 
   const voiceSel = app.querySelector('#voice-name');
   const helloProf = () => speak(`Bonjour ${S.name || ''} ! Je suis ${curProf().intro}.`);
@@ -1580,7 +1585,7 @@ function renderHome() {
     S.prof = c.dataset.id; save(); SFX.pop();
     app.querySelectorAll('.prof-card').forEach((x) => x.classList.toggle('sel', x === c));
     profMood(c, 'happy');
-    app.querySelector('.home > .prof-talk').outerHTML = profSays(esc(profLine('hello')), 'happy');
+    app.querySelector('.hero-guide').innerHTML = profSays(esc(profLine('hello')), 'happy');
     fillVoices();
     helloProf();
   }));
@@ -1629,7 +1634,7 @@ function renderMap() {
       <small><span class="wchip good">bien su</span> <span class="wchip learning">en cours</span> <span class="wchip hard">à revoir</span></small>
     </details>` : ''}
   </section>`;
-  app.querySelector('#btn-home').addEventListener('click', () => { SFX.click(); renderHome(); });
+  app.querySelector('#btn-home').addEventListener('click', () => { SFX.click(); renderHome(); document.getElementById('preparation').scrollIntoView({ block: 'start' }); });
   app.querySelector('#btn-continue').addEventListener('click', () => { SFX.good(); startWorld(destination); });
   let noticeTimer;
   app.querySelectorAll('.world-card').forEach((c) => c.addEventListener('click', () => {
@@ -1656,13 +1661,12 @@ const currentZone = () => document.querySelector('#zone-wrap .zone.current');
 const stillHere = (run) => RUN === run && !!document.getElementById('stage');
 
 function buildZone(z) {
-  const items = z.items.map(([e, x, y, size, anim, rot]) =>
-    `<span class="deco ${anim ? `a-${anim}` : ''}" style="left:${x}%;top:${y}%;font-size:${size}vmin;--r:${rot || 0}deg;animation-delay:-${(Math.random() * 4).toFixed(1)}s">${e}</span>`
-  ).join('');
-  return h(`<div class="zone" style="--sky1:${z.sky[0]};--sky2:${z.sky[1]};--sea1:${z.sea[0]};--sea2:${z.sea[1]}">
-    <div class="sky"></div>
-    <div class="sea"><div class="waves w1"></div><div class="waves w2"></div><div class="waves w3"></div></div>
-    <div class="decos">${items}</div>
+  const world = RUN ? RUN.w.id : 'tropical';
+  return h(`<div class="zone illustrated-zone world-${world}" style="--sky1:${z.sky[0]};--sky2:${z.sky[1]};--sea1:${z.sea[0]};--sea2:${z.sea[1]}">
+    <div class="scene-ocean"></div><div class="scene-light"></div>
+    <img class="scenic-island scenic-left" src="assets/marine/${world}.webp" alt="" aria-hidden="true">
+    <img class="scenic-island scenic-right" src="assets/marine/${world}.webp" alt="" aria-hidden="true">
+    <div class="scene-sparkles" aria-hidden="true"></div>
   </div>`);
 }
 
@@ -1705,13 +1709,13 @@ function startWorld(w) {
   RUN = run;
   setTheme(w);
   document.getElementById('decor').innerHTML = '';
-  app.innerHTML = `<section class="voyage-screen marine-voyage">
+  app.innerHTML = `<section class="voyage-screen marine-voyage theme-${w.id}">
     <div id="zone-wrap"></div>
     <header class="topbar">
-      <button class="icon-btn" id="btn-map" title="Carte">🗺️</button>
+      <button class="icon-btn" id="btn-map" title="Carte des mers" aria-label="Retour à la carte des mers">${nauticalIcon('compass')}</button>
       <div class="track" id="track"></div>
       <div id="streak"></div>
-      <div class="star-count" id="run-stars">⭐ 0</div>
+      <div class="star-count" id="run-stars">${nauticalIcon('star')} 0</div>
       <button class="icon-btn" id="btn-sound" title="Son"></button>
     </header>
     <div class="voyage-caption"><span>LE CARNET D’AVENTURE</span><b>${esc(w.name)}</b></div>
@@ -1730,7 +1734,7 @@ function startWorld(w) {
   updateTrack(false);
 
   const soundBtn = document.getElementById('btn-sound');
-  const paintSound = () => { soundBtn.textContent = S.sound || S.voice ? '🔊' : '🔇'; };
+  const paintSound = () => { soundBtn.innerHTML = nauticalIcon('sound'); soundBtn.setAttribute('aria-label', S.sound || S.voice ? 'Couper le son' : 'Activer le son'); soundBtn.classList.toggle('muted', !(S.sound || S.voice)); };
   paintSound();
   soundBtn.addEventListener('click', () => {
     const on = !(S.sound || S.voice);
@@ -1775,7 +1779,7 @@ function updateTrack(move = true) {
 
 function updateRunStars() {
   const el = document.getElementById('run-stars');
-  el.textContent = `⭐ ${RUN.stars}`;
+  el.innerHTML = `${nauticalIcon('star')} ${RUN.stars}`;
   restart(el, 'bump');
 }
 
@@ -1786,7 +1790,7 @@ function renderStreak() {
 
 function confirmQuit() {
   SFX.click();
-  const ov = h(`<div class="overlay"><div class="confirm-card">
+  const ov = h(`<div class="overlay" role="dialog" aria-modal="true" aria-label="Quitter le voyage"><div class="confirm-card"><div class="dialog-emblem">${nauticalIcon('compass')}</div>
     <h3>Retourner à la carte ?<br><small>Tu devras recommencer cette mer.</small></h3>
     <div class="row"><button class="btn go stay">Je continue ! 💪</button><button class="btn ghost leave">Oui, quitter</button></div>
   </div></div>`);
@@ -1808,13 +1812,14 @@ function enterStep() {
   step.mistakes = 0;
   step.solved = false;
 
-  const el = h(`<div class="room">
+  const el = h(`<div class="room" data-subject="${T.subject}">
+    <div class="exercise-meta"><span>${nauticalIcon(T.subject === 'lecture' ? 'book' : 'compass')} ${T.subject === 'lecture' ? 'L’escale lecture' : 'L’escale des nombres'}</span><span>${RUN.index + 1} / ${RUN.steps.length}</span></div>
     <div class="guide">
       <span class="guide-face prof-face">${profSVG()}</span>
       <div class="bubble">
         <span class="bubble-text"></span>
-        <button class="round-btn say" title="Écouter la consigne">🔊</button>
-        <button class="round-btn hint hidden" title="Un indice">💡</button>
+        <button class="round-btn say" title="Écouter la consigne" aria-label="Écouter la consigne">${nauticalIcon('sound')}</button>
+        <button class="round-btn hint hidden" title="Un indice" aria-label="Afficher un indice">${nauticalIcon('star')}</button>
         <button class="why-btn hidden">🤔 Pourquoi ?</button>
       </div>
     </div>
@@ -1916,10 +1921,10 @@ function showBravo(stars) {
   const isLast = RUN.index === RUN.steps.length - 1;
   const msg = pick(BRAVO).replace(' {name}', S.name ? ` ${S.name}` : '');
   const sub = stars === 3 ? 'Parfait, du premier coup !' : stars === 2 ? 'Bien joué !' : 'Tu as réussi, bravo !';
-  const ov = h(`<div class="overlay"><div class="bravo-card">
+  const ov = h(`<div class="overlay" role="dialog" aria-modal="true" aria-label="Escale réussie"><div class="bravo-card"><span class="eyebrow">UNE NOUVELLE DÉCOUVERTE !</span>
     <div class="bravo-av">${boatSVG(S.boat, 'happy')}</div>
     <h2 class="bravo-title">${esc(msg)}</h2>
-    <div class="bravo-stars">${[0, 1, 2].map((i) => `<span class="bstar ${i < stars ? '' : 'off'}" style="--d:${0.25 + i * 0.28}s">⭐</span>`).join('')}</div>
+    <div class="bravo-stars">${[0, 1, 2].map((i) => `<span class="bstar ${i < stars ? '' : 'off'}" style="--d:${0.25 + i * 0.28}s">${nauticalIcon('star')}</span>`).join('')}</div>
     <p class="bravo-sub">${sub} ${esc(profLine('bravo'))}</p>
     <span class="bravo-prof">${profSVG('happy')}</span>
     ${RUN.streak >= 3 ? `<p class="bravo-streak">🔥 ${RUN.streak} étapes d’affilée sans erreur !</p>` : ''}
@@ -1963,12 +1968,12 @@ function renderTreasure() {
   const max = RUN.steps.length * 3;
   const land = LANDS.sand;
   const el = h(`<div class="treasure">
-    <h2>L’île au trésor !</h2>
+    <span class="eyebrow treasure-kicker">LE TRÉSOR DU VOYAGE</span><h2>Une belle aventure,<br>un trésor bien mérité !</h2>
     <p class="tap-msg">Touche le coffre pour l’ouvrir 👇</p>
     <div class="treasure-isle" style="--g1:${land.g1};--g2:${land.g2};--top:${land.top}">
-      <span class="ti-palm l">🌴</span><span class="ti-palm r">🌴</span>
+      <img class="treasure-shore" src="assets/marine/${w.id}.webp" alt="" aria-hidden="true">
       <button class="chest idle" aria-label="Ouvrir le coffre">
-        <span class="chest-rays"></span>
+        <img class="chest-art chest-closed" src="assets/marine/chest-closed.webp" alt="" width="1448" height="1086"><img class="chest-art chest-open" src="assets/marine/chest-open.webp" alt="" width="1448" height="1086"><span class="chest-rays"></span>
         <span class="chest-reward">${w.reward}</span>
         <span class="chest-lid"></span>
         <span class="chest-body"><span class="chest-lock">🔒</span></span>
@@ -2011,8 +2016,8 @@ function renderTreasure() {
     speak(`Bravo ${S.name || ''} ! Tu as gagné ${w.rewardName} et ${RUN.stars} étoiles !`);
     const res = el.querySelector('.treasure-result');
     res.innerHTML = `
-      <div class="card">
-        <div class="total">⭐ ${RUN.stars} / ${max}</div>
+      <div class="card treasure-record"><span class="eyebrow">DANS TON CARNET DE VOYAGE</span>
+        <div class="total">${nauticalIcon('star')} ${RUN.stars} <small>/ ${max}</small></div>
         ${RUN.stars > prev && wasDone ? '<div>🏅 Nouveau record !</div>' : ''}
         ${unlockedNow ? `<div>🔓 Nouvelle mer ouverte : ${next.emoji} ${next.name} !</div>` : ''}
         ${!next && !wasDone ? '<div>🏆 Tu as exploré toutes les mers ! Capitaine !</div>' : ''}
@@ -2028,4 +2033,5 @@ function renderTreasure() {
 }
 
 // ================= Démarrage =================
+installArtwork();
 renderHome();

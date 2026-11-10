@@ -11,7 +11,5 @@ function chartScenery() {
 }
 
 function chartProfessor() {
-  return S.prof === 'bulle'
-    ? '<img class="chart-professor" src="assets/marine/professor.webp" width="1448" height="1086" alt="Le professeur Bulle te salue" decoding="async">'
-    : `<span class="chart-professor chart-professor-svg">${profSVG()}</span>`;
+  return `<span class="chart-professor chart-professor-svg">${profSVG('happy')}</span>`;
 }
