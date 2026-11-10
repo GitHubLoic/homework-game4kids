@@ -1,0 +1,151 @@
+/* Carte illustrée : textes et contrôles HTML au-dessus d'illustrations transparentes. */
+.map, .marine-voyage { --marine-ink: #152e57; --card: #fffaf0; color: var(--marine-ink); }
+.illustrated-map {
+  position: relative; isolation: isolate; min-height: 100dvh; padding: 18px 24px 32px;
+  background: #08acce url('../assets/marine/water.webp') center top / 850px auto repeat;
+  overflow: clip;
+}
+.illustrated-map::before { content: ''; position: absolute; z-index: -1; inset: 0 0 auto; height: 650px; background: url('../assets/marine/ocean.webp') center top / cover no-repeat; mask-image: linear-gradient(#000 65%, transparent); }
+.map-head { position: relative; z-index: 2; max-width: 1320px; min-height: 52px; }
+.map .hello { font-size: 17px; color: #fff; text-shadow: 0 2px 2px #075f86; }
+.map .icon-btn { width: 54px; height: 54px; color: #fff; font-size: 30px; background: linear-gradient(#40a7ee, #0757b4); border: 3px solid #142c54; box-shadow: inset 0 0 0 3px #dff8ff, 0 4px 0 #133e71; }
+.map .star-count { color: #152e57; border: 3px solid #152e57; border-radius: 40px; background: linear-gradient(#fffdf2, #ffedc0); box-shadow: inset 0 2px 0 #fff, 0 4px 0 #277695; font-size: 25px; padding: 8px 18px; }
+.map .star-count span { font-size: 20px; }
+.chart-title { position: relative; z-index: 1; width: fit-content; max-width: 80%; margin: -52px auto 0; padding: 10px 34px 19px; background: linear-gradient(115deg, #ffe5a9, #fff8e5 25%, #fff3d1 80%, #ffe1a1); border: 3px solid #152e57; border-radius: 42% 42% 25% 25% / 22% 22% 16% 16%; box-shadow: inset 0 0 0 4px #ffe9b7, 0 6px 0 #b38453; transform: rotate(-1deg); }
+.chart-title::before, .chart-title::after { content: ''; position: absolute; z-index: -1; bottom: -7px; width: 30px; height: 54px; background: #f9dca0; border: 3px solid #152e57; }
+.chart-title::before { left: -21px; transform: rotate(12deg); border-radius: 8px 0 0 10px; }
+.chart-title::after { right: -21px; transform: rotate(-12deg); border-radius: 0 8px 10px 0; }
+.chart-title h1 { font-size: clamp(30px, 4.2vw, 57px); line-height: 1; margin: 0; font-weight: 700; letter-spacing: -.035em; color: #152e57; text-shadow: 0 2px #fff; }
+.title-star { position: absolute; bottom: -23px; left: calc(50% - 19px); color: #ffd545; font-size: 37px; line-height: 1; -webkit-text-stroke: 2px #152e57; paint-order: stroke fill; text-shadow: 0 3px #b47a32; }
+.archipelago { position: relative; max-width: 1240px; height: clamp(620px, 62vw, 800px); margin: 12px auto 16px; }
+.chart-scenery { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.chart-route { fill: none; stroke: #ecffff; stroke-width: 4; stroke-dasharray: 5 12; stroke-linecap: round; filter: drop-shadow(0 2px 1px #048db3); }
+.chart-mobile-route { display: none; }
+.map .worlds { position: relative; height: 100%; display: block; padding: 0; max-width: none; margin: 0; }
+.map .world-card {
+  position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  width: 32%; min-height: 0; padding: 0 0 8px; border: 0; border-radius: 28px;
+  color: #152e57; background: none; box-shadow: none; text-align: center;
+  animation: none; transition: transform .2s ease; cursor: pointer; isolation: isolate;
+}
+.map .world-card:nth-child(1) { left: 20%; top: 50%; }
+.map .world-card:nth-child(2) { right: 5%; top: 50%; }
+.map .world-card:nth-child(3) { right: 0; top: 0; }
+.map .world-card:nth-child(4) { left: 34%; top: -4px; }
+.map .world-card:nth-child(5) { left: 0; top: 0; }
+.map .world-card:hover { transform: translateY(-5px) rotate(-1deg); }
+.map .world-card:active { transform: translateY(1px) scale(.98); }
+.island-art { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: contain; filter: drop-shadow(0 10px 6px #005a7926); pointer-events: none; }
+.map .w-name { position: relative; width: max-content; max-width: 95%; margin-top: -20px; padding: 7px 25px 9px; color: #152e57; font-size: clamp(20px, 2.4vw, 31px); font-weight: 700; line-height: 1.05; text-shadow: 0 1px #fff; background: linear-gradient(110deg, #ffe5b2, #fff9e8 30%, #fff5d7 70%, #ffdf9b); border: 2px solid #152e57; border-radius: 40% 40% 22% 22% / 20% 20% 23% 23%; box-shadow: inset 0 0 0 3px #fff3cf, 0 4px 0 #b78246; transform: rotate(-2deg); }
+.map .world-card.locked { filter: none; cursor: not-allowed; }
+.map .world-card.locked:hover, .map .world-card:disabled:active { transform: none; }
+.map .world-card.locked .island-art { opacity: .8; }
+.map .world-card.next { outline: none; }
+.chart-direction { position: relative; width: fit-content; max-width: 100%; margin: 28px auto 0; padding: 6px 14px; border-radius: 20px; background: #e7fbf2e8; color: #163d56; font-size: 13px; text-align: center; }
+.map .w-name small { display: block; margin-bottom: 4px; color: #53656a; font-size: 11px; font-weight: 500; letter-spacing: .05em; }
+.world-requirement, .world-progress { margin-top: 5px; padding: 3px 9px; border-radius: 12px; color: #244d5e; background: #e8faf4e6; font-size: 11px; line-height: 1.3; }
+.world-card:not(:disabled) .island-status { border-color: #2c7564; background: #e6f8db; color: #225b47; }
+.island-status { position: relative; z-index: 1; margin-top: 7px; color: #133953; font-size: 12px; line-height: 1.1; font-weight: 600; background: #e9faffed; border: 1px solid #1e6988; border-radius: 18px; padding: 4px 10px; }
+.map .world-card.next .island-status { color: #152e57; background: linear-gradient(#ffe878, #ffc619); border: 2px solid #152e57; box-shadow: inset 0 2px #fff3ac, 0 2px #a87530; padding: 5px 17px; font-size: 14px; }
+.chart-boat { position: absolute; z-index: 1; width: 10%; left: 54%; top: 47%; pointer-events: none; }
+.chart-boat .boat-svg { width: 100%; filter: drop-shadow(0 5px 0 #11719288); animation: rock 3s ease-in-out infinite; }
+.chart-crew { position: relative; z-index: 1; display: flex; align-items: flex-start; max-width: 1300px; height: 0; margin: 0 auto; pointer-events: none; }
+.chart-professor { width: 260px; height: auto; object-fit: contain; transform: translate(-25px, -175px); }
+.chart-professor-svg { display: block; width: 130px; margin-left: 40px; }
+.crew-bubble { position: absolute; left: 175px; top: -135px; margin: 0; background: #fff8e2; border: 3px solid #152e57; border-radius: 50%; padding: 14px 24px; font-size: 20px; line-height: 1.1; font-weight: 700; text-align: center; box-shadow: 0 3px #0a7e9a; }
+.chart-departure { position: relative; z-index: 2; width: min(510px, 55%); margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 9px; }
+.chart-continue { width: 100%; justify-content: center; white-space: nowrap; background: linear-gradient(#ffe963, #ffce15 70%, #ffc20b); border: 3px solid #152e57; border-radius: 50px; color: #132d56; box-shadow: inset 0 3px #fffbc1, inset 0 0 0 5px #ffe87d, 0 5px 0 #a86620, 0 8px 0 #152e57; font-size: clamp(19px, 2.6vw, 32px) !important; padding: 17px 25px !important; text-shadow: 0 1px #fff5a1; transition: transform .15s, filter .15s; }
+.chart-continue span { margin-left: 8px; }
+.chart-continue:hover { filter: brightness(1.06); transform: translateY(-2px); }
+.chart-continue:active { transform: translateY(4px); box-shadow: inset 0 0 0 4px #ffe87d, 0 3px #152e57; }
+.chart-destination { font-size: 13px; color: #153e5a; background: #e1f7f3eb; border-radius: 20px; padding: 4px 12px; }
+.chart-notice { position: fixed; z-index: 21; bottom: 128px; left: 50%; transform: translateX(-50%); margin: 0; width: max-content; max-width: calc(100% - 32px); padding: 12px 18px; color: #152e57; background: #fff8e2; border: 2px solid #152e57; border-radius: 18px; box-shadow: 0 4px #193858; font-size: 16px; text-align: center; pointer-events: none; }
+.chart-notice:empty { display: none; }
+.map .words-board { position: relative; z-index: 2; display: block; max-width: 760px; margin: 32px auto 0; padding: 13px 18px; background: #fff9e9ed; border: 2px solid #152e57; box-shadow: 0 3px #152e57; border-radius: 20px; }
+.words-board summary { cursor: pointer; font-size: 17px; font-weight: 600; }
+.words-board[open] summary { margin-bottom: 12px; }
+.map button:focus-visible, .map summary:focus-visible, .marine-voyage button:focus-visible { outline: 4px solid #fff; outline-offset: 5px; box-shadow: 0 0 0 8px #152e57; }
+@media (max-width: 900px) and (min-width: 701px) {
+  .archipelago { height: 620px; }
+  .chart-professor { width: 190px; transform: translate(-20px, -125px); }
+  .crew-bubble { left: 120px; top: -100px; font-size: 16px; padding: 12px; }
+  .map .hello { font-size: 14px; }
+}
+@media (max-width: 700px) {
+  html:has(.illustrated-map) { scroll-padding-bottom: 140px; }
+  .map .world-card, .map summary { scroll-margin-bottom: 140px; }
+  .illustrated-map { padding: 12px 10px calc(130px + env(safe-area-inset-bottom)); background-size: 650px auto; }
+  .illustrated-map::before { height: 650px; background-size: auto 100dvh; }
+  .map-head { min-height: 48px; align-items: flex-start; }
+  .map .hello { display: none; }
+  .map .icon-btn { width: 48px; height: 48px; font-size: 25px; }
+  .map .star-count { margin-left: auto; font-size: 22px; padding: 7px 12px; }
+  .map .star-count span { font-size: 17px; }
+  .chart-title { margin: 8px auto 0; padding: 12px 26px 19px; max-width: 76%; transform: rotate(-2deg); }
+  .chart-title h1 { font-size: clamp(33px, 9.4vw, 56px); text-align: center; line-height: .99; }
+  .chart-title h1 span { display: block; }
+  .chart-title::before, .chart-title::after { height: 60px; }
+  .archipelago { width: 100%; height: auto; margin: 18px auto 0; }
+  .chart-desktop-route { display: none; }
+  .chart-mobile-route { display: block; }
+  .map .worlds { display: flex; flex-direction: column-reverse; gap: 34px; height: auto; padding: 0; }
+  .map .world-card:nth-child(n) { position: relative; inset: auto; width: 79%; flex: none; }
+  .map .world-card:nth-child(odd) { align-self: flex-start; }
+  .map .world-card:nth-child(even) { align-self: flex-end; }
+  .map .w-name { font-size: clamp(23px, 6.3vw, 36px); padding: 6px 22px 9px; margin-top: -18px; }
+  .island-status { margin-top: 6px; padding: 4px 9px; font-size: 11px; }
+  .map .world-card.next .island-status { font-size: 12px; padding: 5px 13px; }
+  .chart-boat { display: block; width: 20%; left: auto; right: 0; top: 86%; }
+  .chart-crew { height: 160px; margin: 8px -10px 0; align-items: center; }
+  .chart-professor { width: 230px; transform: none; margin-left: -25px; }
+  .chart-professor-svg { width: 110px; margin: 0 35px; }
+  .crew-bubble { left: 150px; top: 12px; font-size: 21px; padding: 13px 21px; }
+  .chart-departure { position: fixed; z-index: 20; left: 0; bottom: 0; width: 100%; margin: 0; padding: 12px 15px calc(16px + env(safe-area-inset-bottom)); background: linear-gradient(#fff8e8, #ffedcc); border-top: 2px solid #c88a45; box-shadow: 0 -4px 18px #07557026; }
+  .chart-continue { min-height: 62px; padding: 13px 12px !important; font-size: clamp(20px, 5.8vw, 30px) !important; }
+  .chart-destination { display: none; }
+  .map .words-board { margin-top: 25px; padding: 13px 16px; }
+  .chart-notice { bottom: calc(118px + env(safe-area-inset-bottom)); font-size: 15px; }
+}
+
+/* La lecture se fait sur un panneau calme, au-dessus du décor marin. */
+.marine-voyage .topbar { background: #fffaf0f5; border-bottom: 3px solid #193858; backdrop-filter: none; gap: 14px; }
+.marine-voyage .track-line { background: repeating-linear-gradient(90deg, #92bbc7 0 10px, transparent 10px 18px); }
+.marine-voyage .node { border: 2px solid #193858; box-shadow: 0 2px #193858; }
+.marine-voyage .node.chest-node { border: 0; box-shadow: none; }
+.voyage-caption { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 22px 12px 4px; color: #193858; }
+.voyage-caption span { font-size: 11px; font-weight: 700; letter-spacing: .19em; background: #fffaf0; padding: 5px 10px; border-radius: 12px; }
+.voyage-caption b { font-size: 23px; color: #fffaf0; text-shadow: 0 2px #193858; -webkit-text-stroke: 1px #193858; paint-order: stroke fill; }
+.marine-voyage .stage { max-width: 960px; }
+.marine-voyage .room { gap: 18px; padding: 20px 22px 34px; background: #fffaf0f7; border: 3px solid #193858; border-radius: 30px; box-shadow: 0 7px 0 #193858, 0 16px 35px #124e6c26; }
+.marine-voyage .guide { width: 100%; padding-bottom: 12px; border-bottom: 2px dashed #e3d7b9; }
+.marine-voyage .guide-face { width: 76px; animation: none; }
+.marine-voyage .bubble { background: #edf7f5; border: 2px solid #a2c9cb; box-shadow: none; font-size: 20px; }
+.marine-voyage .bubble::before { border-right-color: #a2c9cb; }
+.marine-voyage .sentence, .marine-voyage .blocks-card { background: #fff; border: 2px solid #d7e7e3; box-shadow: 0 3px 0 #d7e7e3; }
+.marine-voyage .islands { width: 100%; gap: clamp(14px, 3vw, 32px); padding: 12px 0; }
+.marine-voyage .island { animation: islandRise .6s backwards; }
+.marine-voyage .isle-card { background: #fff8e4; border: 2px solid #193858; box-shadow: 0 4px 0 #193858; }
+.marine-voyage .isle-land { border: 2px solid #193858; animation: none; box-shadow: 0 4px 0 #b5e8e7; }
+.marine-voyage .big-number { color: #193858; -webkit-text-stroke: 0; text-shadow: none; }
+.marine-voyage .big-emoji { animation: pop .45s; }
+.marine-voyage .round-btn { border: 2px solid #193858; background: #ffdc64; min-width: 42px; }
+.marine-voyage .zone .deco { opacity: .65; }
+.marine-voyage .zone .deco, .marine-voyage .waves { animation-play-state: paused; }
+.marine-voyage .island.won .isle-card { background: #e1f8dd; box-shadow: 0 4px 0 #193858, 0 0 0 4px #ffd23f; }
+@media (max-width: 700px) {
+  .marine-voyage .topbar { gap: 6px; padding: 8px; }
+  .marine-voyage .topbar .star-count { font-size: 16px; padding: 7px; }
+  .marine-voyage .track { margin: 0 12px; }
+  .marine-voyage .icon-btn { width: 42px; height: 42px; }
+  .marine-voyage .room { padding: 14px 10px 26px; border-radius: 24px; }
+  .marine-voyage .guide { gap: 8px; }
+  .marine-voyage .guide-face { width: 50px; }
+  .marine-voyage .bubble { font-size: 17px; padding: 10px; flex-wrap: wrap; }
+  .marine-voyage .bubble-text { min-width: 100%; }
+  .marine-voyage .stage { padding-left: 8px; padding-right: 8px; }
+  .marine-voyage .islands { --cw: clamp(100px, 34vw, 150px); gap: 18px; }
+  .marine-voyage .islands.n4 { --cw: clamp(100px, 34vw, 150px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .map *, .marine-voyage * { animation: none !important; transition: none !important; }
+}

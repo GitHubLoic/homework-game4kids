@@ -20,17 +20,18 @@ function boatSVG(b, cls = '') {
   }
 
   return `<svg class="boat-svg ${cls}" viewBox="0 0 120 112" aria-hidden="true">
-    <defs><clipPath id="${id}"><path d="${mainSail}"/><path d="${jib}"/></clipPath></defs>
+    <defs><clipPath id="${id}"><path d="${mainSail}"/><path d="${jib}"/></clipPath><linearGradient id="${id}-hull" x1="0" y1="0" x2="0" y2="1"><stop stop-color="${hull}"/><stop offset="1" stop-color="${hull}" stop-opacity=".78"/></linearGradient></defs>
     <g class="b-body">
-      <rect x="58" y="8" width="5" height="68" rx="2" fill="#7a4a26"/>
-      <path class="b-flag" d="M63 8 L80 12 L63 17 Z" fill="${hull}"/>
+      <rect x="58" y="8" width="5" height="68" rx="2" fill="#b77b42" stroke="#183452" stroke-width="1.5"/>
+      <path class="b-flag" d="M63 8 L80 12 L63 17 Z" fill="${hull}" stroke="#183452" stroke-width="1.5" stroke-linejoin="round"/>
       <g class="b-sails">
-        <path d="${mainSail}" fill="${sail}" stroke="rgba(0,0,0,.15)" stroke-width="1.5"/>
-        <path d="${jib}" fill="${sail}" stroke="rgba(0,0,0,.15)" stroke-width="1.5"/>
+        <path d="${mainSail}" fill="${sail}" stroke="#183452" stroke-width="1.7"/>
+        <path d="${jib}" fill="${sail}" stroke="#183452" stroke-width="1.7"/>
         <g clip-path="url(#${id})">${deco}</g>
       </g>
-      <path d="M10 72 L110 72 Q104 100 86 104 L34 104 Q16 100 10 72 Z" fill="${hull}"/>
-      <path d="M10 72 L110 72 L108 80 L12 80 Z" fill="#fff" opacity=".85"/>
+      <path d="M10 72 L110 72 Q104 100 86 104 L34 104 Q16 100 10 72 Z" fill="url(#${id}-hull)" stroke="#183452" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M10 72 L110 72 L108 80 L12 80 Z" fill="#fff5d5" stroke="#183452" stroke-width="1.2"/>
+      <path d="M17 84 30 86m60-1 12-2" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="2" stroke-linecap="round"/>
       <path d="M34 104 Q16 100 13 86 Q60 96 107 86 Q104 100 86 104 Z" fill="rgba(0,0,0,.15)"/>
       <g class="b-eyes">
         <ellipse cx="46" cy="89" rx="5" ry="6" fill="#fff"/><ellipse cx="74" cy="89" rx="5" ry="6" fill="#fff"/>

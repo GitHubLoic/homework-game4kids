@@ -1,0 +1,374 @@
+/* Direction artistique commune : océan turquoise, encre marine, papier crème et or. */
+:root {
+  --ink: #183452; --card: #fff9e9; --accent: #ffd454;
+  --good: #229d85; --bad: #df6470; --paper-edge: #e6cda2;
+  --sea-deep: #057fa4; --sea-light: #c8f0ed;
+}
+body { background: #0babc6; color: var(--ink); }
+#decor { display: none; }
+button, a, input, select, textarea { -webkit-tap-highlight-color: #ffd45455; }
+button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid #0b667b; outline-offset: 5px; }
+.ui-icon { display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -.18em; flex: none; }
+.picture { display: inline-block; width: 1em; height: 1em; vertical-align: -.12em; object-fit: contain; user-select: none; }
+.btn {
+  min-height: 48px; max-width: 100%; padding: 12px 23px; border: 2px solid var(--ink);
+  border-radius: 22px; background: linear-gradient(#ffe88a, #ffd247); color: var(--ink);
+  box-shadow: inset 0 2px #fff7d2, 0 4px var(--ink); font-size: 19px; font-weight: 600;
+  transition: transform .15s, filter .15s, box-shadow .15s;
+}
+.btn:hover { filter: brightness(1.03); transform: translateY(-2px); }
+.btn:active { transform: translateY(3px); box-shadow: 0 1px var(--ink); }
+.btn.big { font-size: clamp(20px, 2.1vw, 26px); padding: 16px 29px; border-radius: 32px; }
+.btn.go { background: linear-gradient(#ffe88a, #ffd247); color: var(--ink); }
+.btn.ghost { background: #fffaf0; box-shadow: 0 3px var(--ink); }
+.pulse { animation: none; }
+.icon-btn, .round-btn { border: 2px solid var(--ink); background: #fff9e9; color: var(--ink); box-shadow: 0 3px var(--ink); }
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; }
+.eyebrow { display: block; color: #457b86; font-size: 11px; line-height: 1.6; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+/* Les quatre compagnons partagent la même famille d'illustrations. */
+.illustrated-prof { position: relative; display: block; overflow: visible; line-height: 0; }
+.illustrated-prof > img { display: block; width: 100%; height: auto; object-fit: contain; }
+.illustrated-prof .prof-spark { display: none; position: absolute; top: 8%; right: 5%; width: 22%; color: #183452; }
+.illustrated-prof .prof-spark .ui-icon { width: 100%; height: auto; }
+.illustrated-prof[data-mood="happy"] .prof-spark, .illustrated-prof[data-mood="think"] .prof-spark { display: block; }
+.illustrated-prof[data-mood="happy"] { filter: drop-shadow(0 0 8px #ffe08288); }
+.illustrated-prof[data-mood="think"] { transform: rotate(-4deg); }
+.illustrated-prof[data-mood="oops"] { transform: rotate(3deg); }
+.prof-wrap, .guide-face.prof-face { animation: none; filter: none; }
+/* Accueil : une invitation au voyage, puis un atelier de préparation. */
+.art-home {
+  display: block; position: relative; overflow: clip; text-align: left; padding: 0 30px 24px;
+  min-height: 100dvh; background: linear-gradient(#effcf8 0, #e4f7ef 660px, #f8f2e1 1100px, #fffaf0);
+}
+.home-nav { display: flex; align-items: center; justify-content: space-between; max-width: 1200px; margin: 0 auto; padding: 24px 0; gap: 16px; }
+.home-brand { display: inline-flex; align-items: center; gap: 9px; color: var(--ink); text-decoration: none; font-size: 22px; font-weight: 700; }
+.home-brand > .ui-icon { width: 36px; height: 36px; }
+.home-map { font-size: 16px; padding: 9px 18px; min-height: 43px; border-radius: 20px; }
+.home-hero { display: grid; grid-template-columns: 1fr 1.05fr; align-items: center; max-width: 1200px; margin: 24px auto 70px; gap: 20px; }
+.hero-copy { position: relative; z-index: 1; }
+.art-home .title { margin: 12px 0 22px; font-size: clamp(42px, 5vw, 70px); line-height: 1.02; color: var(--ink); letter-spacing: -.035em; text-shadow: none; }
+.art-home .title span { color: #0b919c; }
+.art-home .subtitle { color: #426976; font-size: 20px; line-height: 1.55; margin: 0; opacity: 1; }
+.home-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; margin: 28px 0 22px; }
+.prepare-link { color: #315868; font-size: 15px; text-decoration-thickness: 1px; text-underline-offset: 5px; }
+.prepare-link .ui-icon { margin-left: 5px; }
+.hero-guide { max-width: 470px; }
+.hero-guide .prof-talk { width: 100%; gap: 0; }
+.hero-guide .prof-wrap { width: 108px; margin-left: -18px; }
+.hero-guide .bubble { padding: 12px 14px; border: 1px solid #b6d5cc; background: #fffdf5; color: #456572; box-shadow: 0 3px #bbd9cc; border-radius: 17px; font-size: 15px; font-weight: 500; }
+.hero-guide .bubble::before { border-right-color: #fffdf5; }
+.hero-art { position: relative; padding: 32px 0 50px; isolation: isolate; }
+.hero-art::before { content: ''; position: absolute; z-index: -1; inset: 5% -5% 4%; border-radius: 50%; background: radial-gradient(ellipse, #85dedb 0, #b3ece1 50%, transparent 70%); }
+.hero-island { display: block; width: 112%; max-width: none; height: auto; margin-left: -6%; filter: drop-shadow(0 22px 15px #3c9b9f2b); }
+.hero-boat { position: absolute; width: 26%; bottom: 0; right: 4%; transform: rotate(-7deg); }
+.hero-stamp { position: absolute; left: 1%; bottom: -12px; display: grid; justify-items: center; padding: 17px 19px; border: 2px dashed #9b773d; border-radius: 50%; color: #7b602f; background: #fff2c5; font-size: 14px; text-align: center; line-height: 1.3; transform: rotate(-9deg); }
+.hero-stamp .ui-icon { margin-top: 6px; }
+.preparation-head { max-width: 1200px; margin: 0 auto 24px; text-align: center; scroll-margin-top: 24px; }
+.preparation-head h2 { font-size: clamp(28px, 3.2vw, 40px); margin: 8px 0; letter-spacing: -.02em; }
+.preparation-head p { font-size: 17px; color: #617b80; margin: 0; }
+.art-home .setup { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; width: 100%; max-width: 1050px; margin: 0 auto; background: none; padding: 0; box-shadow: none; }
+.setup-section { min-width: 0; margin: 0; padding: 24px; background: #fffdf5; border: 2px solid #d9c7a2; border-radius: 24px; box-shadow: 0 5px #e6d9bd; display: flex; flex-direction: column; gap: 18px; }
+.setup-section legend { padding: 0 10px; font-size: 20px; color: #284c5b; font-weight: 600; }
+.setup-section legend .ui-icon { color: #25455e; margin-right: 5px; }
+.art-home .field > span { color: #3e626b; font-size: 16px; }
+.art-home .field small { color: #718a89; font-size: 13px; line-height: 1.45; }
+.field input, .field textarea, .voice-pick input, .voice-pick select { border: 2px solid #d4e2d9; background: #fff; border-radius: 14px; color: var(--ink); box-shadow: inset 0 2px #f0f5ee; }
+.field input, .voice-pick input { font-size: 23px; padding: 10px 14px; }
+.field textarea { font-size: 19px; padding: 12px 14px; line-height: 1.6; }
+.field input:focus, .field textarea:focus, .voice-pick input:focus, .voice-pick select:focus { border-color: #258d98; outline: 3px solid #c1efdf; outline-offset: 1px; }
+.seg button, .chip, .seg-btn { background: #edf4ed; color: #3b606c; border: 2px solid #d1dfd1; border-radius: 13px; font-size: 16px; padding: 10px; min-height: 43px; }
+.seg button.sel, .chip.sel, .prof-card.sel { color: #173b52; border-color: #ba8c32; background: #fff0bd; box-shadow: inset 0 0 0 2px #fff8dd; }
+.chip { min-width: 0; padding: 8px 4px; font-size: 14px; }
+.voice-pick { margin: 0; align-items: center; }
+.voice-pick select { font-size: 15px; }
+.voice-pick .seg-btn { font-size: 14px; }
+.boat-settings .boat-maker { flex-direction: column; gap: 18px; }
+.boat-settings .boat-preview { width: 180px; height: 160px; border-radius: 28px; border: 2px solid #7eb6bd; background: linear-gradient(#dcf5ee 62%, #61cdd3 62%); }
+.boat-settings .boat-opts { width: 100%; min-width: 0; }
+.opt-row { grid-template-columns: 45px minmax(0, 1fr); }
+.opt-row em { font-size: 14px; color: #577680; }
+.swatch { min-width: 0; border: 3px solid #fff; }
+.crew-settings { grid-column: 1 / -1; order: 4; }
+.sound-settings { order: 3; }
+.art-home .prof-pick { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.art-home .prof-card { position: relative; padding: 10px 8px 14px; background: #f3f7ee; border: 2px solid #d9e2d1; border-radius: 20px; gap: 6px; min-width: 0; }
+.art-home .prof-card.sel { border-color: #ba8c32; background: #fff0bd; }
+.prof-card.sel::after { content: '✓'; position: absolute; top: 8px; right: 8px; display: grid; place-items: center; border: 1px solid #91681c; border-radius: 50%; width: 22px; height: 22px; color: #624513; background: #ffdd73; font-size: 14px; }
+.art-home .prof-mini { width: 100%; max-width: 160px; }
+.prof-card b { font-size: 17px; }
+.prof-card small { color: #688386; font-size: 13px; line-height: 1.4; }
+.voice-settings { border-top: 1px dashed #d7d8bf; padding-top: 14px; }
+.voice-settings summary { color: #4e737d; font-size: 14px; cursor: pointer; }
+.voice-settings[open] .voice-pick { margin-top: 14px; }
+.home-bottom { text-align: center; margin: 34px auto 40px; }
+.home-bottom p { font-size: 13px; color: #6a8588; margin-top: 16px; }
+.game-footer { text-align: center; font-size: 13px; line-height: 1.7; color: #738b89; border-top: 1px solid #dfdfce; padding-top: 20px; max-width: 1050px; margin: 0 auto; }
+.game-footer > span { margin: 0 8px; }
+.game-footer details { margin-top: 8px; font-size: 11px; }
+.game-footer summary { cursor: pointer; }
+.game-footer a { color: inherit; }
+/* La carte validée garde ses illustrations et reçoit les mêmes compagnons. */
+.chart-crew .chart-professor-svg { width: 270px; margin-left: 0; transform: translate(-28px, -178px); }
+.chart-crew .chart-professor-svg .prof { width: 100%; }
+.illustrated-map .chart-continue { background: linear-gradient(#ffe963, #ffce15 70%, #ffc20b); border: 3px solid #152e57; border-radius: 50px; box-shadow: inset 0 3px #fffbc1, inset 0 0 0 5px #ffe87d, 0 5px #a86620, 0 8px #152e57; }
+/* Les cinq mers : véritables décors illustrés, discrets derrière la lecture. */
+.illustrated-zone { background: #05a5c1; }
+.scene-ocean { position: absolute; inset: 0; background: url('../assets/marine/ocean.webp') center top / cover no-repeat; }
+.scene-light { position: absolute; inset: 0; background: linear-gradient(var(--sky1), transparent 35%, var(--sea2)); opacity: .2; }
+.scenic-island { position: absolute; width: clamp(240px, 30vw, 500px); height: auto; opacity: .68; filter: drop-shadow(0 15px 12px #073d5d22); }
+.scenic-left { left: -6%; bottom: 1%; transform: rotate(-5deg); }
+.scenic-right { right: -6%; top: 12%; width: clamp(160px, 22vw, 340px); opacity: .5; }
+.world-pirates .scene-ocean { filter: saturate(.8) brightness(.78); }
+.world-ice .scene-ocean { filter: saturate(.5) hue-rotate(8deg) brightness(1.1); }
+.world-candy .scene-ocean { filter: hue-rotate(17deg) saturate(.65); }
+.world-candy .scene-light { background: linear-gradient(#f5a4ce, transparent 50%, #b99dea); opacity: .45; }
+.world-stars .scene-ocean { filter: brightness(.32) hue-rotate(30deg); }
+.world-stars .scene-light { background: linear-gradient(#301454, transparent, #24245b); opacity: .55; }
+.world-stars .scene-sparkles { position: absolute; inset: 0; opacity: .7; background-image: radial-gradient(circle, #ffedbd 1px, transparent 2px), radial-gradient(circle, #fff 1px, transparent 2px); background-size: 97px 107px, 183px 151px; background-position: 0 0, 43px 67px; }
+/* Les consignes flottent au-dessus de la mer ; les réponses sont des îles. */
+.marine-voyage { --cw: clamp(128px, 19vw, 180px); min-height: 100dvh; }
+.marine-voyage .topbar { padding: 12px 20px; background: #fffaf0f5; border-bottom: 2px solid #193858; box-shadow: 0 4px 20px #06394b18; }
+.marine-voyage .topbar .icon-btn { width: 46px; height: 46px; border-radius: 16px; font-size: 23px; }
+.icon-btn.muted { opacity: .6; }
+.marine-voyage .star-count { display: flex; align-items: center; gap: 7px; font-size: 21px; background: #fff0bb; border: 2px solid #9b7837; box-shadow: 0 3px #c8a457; }
+.marine-voyage .track { height: 42px; }
+.marine-voyage .node { color: #456c74; background: #fff; }
+.marine-voyage .node.done { background: #b8e5cb; }
+.marine-voyage .node.current { background: #ffe496; box-shadow: 0 0 0 3px #ffdd86; }
+.voyage-caption { margin: 22px 12px 8px; gap: 6px; }
+.voyage-caption b { font-size: 25px; letter-spacing: .01em; }
+.marine-voyage .stage { max-width: 1050px; padding-top: 8px; }
+.marine-voyage .room { padding: 0; gap: 14px; border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }
+.exercise-meta { display: none; width: calc(100% + 56px); padding: 11px 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #f5eacc; border-bottom: 1px solid #e0cda0; border-radius: 26px 26px 0 0; color: #6f704f; font-size: 12px; letter-spacing: .025em; }
+.exercise-meta > span:first-child { display: flex; align-items: center; gap: 7px; }
+.exercise-meta > span:last-child { min-width: 44px; padding: 4px 8px; text-align: center; background: #fff8e5; border-radius: 20px; }
+.marine-voyage .guide { width: min(760px, 100%); border: 0; gap: 10px; padding: 0; }
+.marine-voyage .guide-face.prof-face { width: 122px; margin-left: -18px; }
+.marine-voyage .bubble { background: #edf6ef; border: 1px solid #bed3c5; border-radius: 20px; padding: 14px 16px; color: #2e5360; font-size: clamp(17px, 1.9vw, 21px); font-weight: 500; line-height: 1.4; }
+.marine-voyage .bubble::before { border-right-color: #bed3c5; }
+.marine-voyage .bubble .round-btn { width: 42px; height: 42px; min-width: 42px; font-size: 20px; border: 1px solid #8aa9a7; background: #fff5d9; box-shadow: 0 2px #a2bcb0; }
+.why-btn { background: #fff0bd; color: #74562c; border: 1px solid #bc9d63; box-shadow: 0 2px #c8b181; animation: none; white-space: normal; }
+.marine-voyage .room-body { gap: 20px; }
+.marine-voyage .sentence, .marine-voyage .blocks-card, .marine-voyage .scene.big { color: #183452; background: #fffefa; border: 2px solid #d7dfcd; box-shadow: 0 4px #e1dfc8; border-radius: 20px; padding: 15px 25px; }
+.marine-voyage .sentence { font-size: clamp(27px, 4vw, 44px); line-height: 1.5; }
+.marine-voyage .big-number { font-size: clamp(44px, 6vw, 72px); background: #fffdf4; border: 2px solid #e4d3ab; border-radius: 22px; padding: 12px 27px; -webkit-text-stroke: 0; text-shadow: none; color: #183452; }
+.marine-voyage .big-number .qmark { color: #b98421; animation: none; }
+.marine-voyage .big-emoji { display: grid; place-items: center; width: 140px; height: 140px; padding: 14px; background: #fffdf4; border: 2px solid #eadbb8; border-radius: 32% 36% 34% 31%; box-shadow: 0 5px #e4ddc4; filter: none; font-size: 100px; }
+.marine-voyage .listen-btn { color: #385c68; border: 2px solid #c3d8d1; background: #edf7f0; box-shadow: 0 4px #c5d6c9; padding: 14px 25px; border-radius: 24px; }
+.marine-voyage .daily-word { font-size: clamp(37px, 6vw, 62px); padding: 10px 35px; }
+.marine-voyage .blank { color: #ba7c29; border-bottom-color: #d5a44a; }
+.marine-voyage .islands { justify-content: space-evenly; gap: 42px 28px; align-items: flex-start; padding: 20px 0 10px; }
+.marine-voyage .island { margin-bottom: 0; padding-bottom: 0; scroll-margin-top: 105px; scroll-margin-bottom: 120px; animation: islandRise .6s backwards, isleBob 4s ease-in-out infinite; animation-delay: calc(var(--i) * .1s), calc(var(--i) * -.7s); }
+.marine-voyage .isle-card { position: relative; z-index: 1; width: 100%; min-height: calc(var(--cw) * .66); padding: 10px; border: 2px solid #7c6745; border-radius: 17px; background: linear-gradient(#fffdf2, #fff1cf); box-shadow: inset 0 0 0 3px #fff7df, 0 4px #a88756; }
+.marine-voyage .isle-post { position: relative; z-index: 1; width: 8px; height: 12px; border: 1px solid #78512c; background: #b48650; }
+.marine-voyage .isle-land { width: 118%; height: calc(var(--cw) * .34); margin-top: calc(var(--cw) * -.09); border: 0; background: none; box-shadow: none; }
+.answer-island-art { position: absolute; width: 100%; height: auto; left: 0; bottom: 0; pointer-events: none; }
+.marine-voyage .island.won .isle-card { background: #def2d8; border-color: #298c71; box-shadow: inset 0 0 0 3px #f0ffe8, 0 4px #478e65, 0 0 0 4px #ffe18e; }
+.marine-voyage .island.won::before { content: '✓'; color: #fff; background: #23876c; border: 2px solid #fff9df; border-radius: 50%; width: 34px; height: 34px; top: -18px; font-size: 25px; text-align: center; }
+.marine-voyage .island.rocky .isle-sign { filter: none; }
+.marine-voyage .island.rocky .isle-card { background: #f4e6df; border-color: #ae7973; color: #866f69; box-shadow: 0 3px #c4a49b; }
+.marine-voyage .island.rocky::after { content: '↻'; font-family: var(--font-ui); font-size: 24px; color: #ae6d5f; background: #fff1db; border: 1px solid #c4a49b; border-radius: 50%; width: 30px; height: 30px; bottom: 15px; }
+.marine-voyage .scene .who, .marine-voyage .scene .what { display: flex; justify-content: center; align-items: center; gap: 3px; }
+.marine-voyage .scene.big { gap: 14px; }
+.marine-voyage .tile, .marine-voyage .stone, .marine-voyage .piece.tappable { background: linear-gradient(#fffdf0, #fff1cd); border: 2px solid #af925d; color: #284959; box-shadow: inset 0 2px #fff, 0 4px #b6a071; border-radius: 14px; }
+.marine-voyage .tile.used { opacity: .35; }
+.marine-voyage .slot { background: #eef3e8; border: 2px dashed #b4c6b1; box-shadow: none; border-radius: 13px; color: #315569; }
+.marine-voyage .slot.filled { border-style: solid; border-color: #caa25e; background: #fff1cf; }
+.marine-voyage .stone::before, .marine-voyage .stone::after { display: none; }
+.marine-voyage .stone span { background: none; color: #284959; text-shadow: none; }
+.marine-voyage .torch .tval { background: #fff5d6; color: #284959; border: 2px solid #d7c49b; box-shadow: 0 3px #d3c29b; }
+.marine-voyage .order-hint, .marine-voyage .vault-tip { color: #597a7c; -webkit-text-stroke: 0; text-shadow: none; line-height: 1.5; }
+.marine-voyage .vault-box { background: linear-gradient(#f6e0b5, #e0bb81); border: 3px solid #937040; box-shadow: inset 0 0 0 4px #ffe9b9, 0 4px #a9824c; border-radius: 20px; }
+.marine-voyage .du-col { background: #fbf8e9; border: 2px solid #d3cdb2; box-shadow: 0 3px #dfd6b9; border-radius: 14px; }
+.marine-voyage .vault-btns .btn { background: #fff7de; }
+.marine-voyage .vault-btns .btn.go { background: #ffda65; }
+.marine-voyage .hint-box, .marine-voyage .explain { width: 100%; max-width: 800px; border: 2px solid #b6ccb5; background: #f0f7e9; border-radius: 20px; box-shadow: 0 4px #c9d5b5; padding: 16px; color: #355866; font-size: clamp(17px, 2.3vw, 23px); line-height: 1.5; }
+.marine-voyage .explain { border-color: #c8ad6c; background: #fff6d9; box-shadow: 0 4px #ddc790; }
+.marine-voyage .ex-word, .marine-voyage .ex-num, .marine-voyage .ex-form, .marine-voyage .ex-dets > div { background: #fffdf5; border: 1px solid #dfd8b9; }
+.marine-voyage .ex-chip, .marine-voyage .ex-hop { background: #fffdf5; border: 1px solid #dfd8b9; }
+/* Escales, confirmations et victoires appartiennent au même carnet de voyage. */
+.room-banner { color: #183452; background: #fff5d4; border: 2px solid #193858; box-shadow: 0 5px #b59150, 0 15px 45px #0b405b55; border-radius: 24px; max-width: calc(100% - 32px); text-align: center; }
+.room-banner small { color: #88794d; font-size: 12px; letter-spacing: .1em; }
+.room-banner b { color: var(--ink); }
+.overlay { padding: 24px 16px; background: #07334b9c; backdrop-filter: blur(4px); overflow-y: auto; }
+.bravo-card, .confirm-card { position: relative; border: 3px solid #193858; border-radius: 30px; background: #fff8e6; box-shadow: 0 7px #ad8a4a, 0 25px 80px #001e3b55; padding: 30px; max-height: calc(100dvh - 48px); overflow-y: auto; }
+.bravo-card { width: min(540px, 100%); display: flex; flex-direction: column; align-items: center; }
+.bravo-av { width: 76px; margin: 8px auto -5px; }
+.bravo-title { color: #193858; font-size: clamp(27px, 4vw, 38px); margin: 10px 0; line-height: 1.15; }
+.bravo-stars { gap: 12px; margin: 10px 0; }
+.bstar { font-size: 52px; }
+.bstar .ui-icon { width: 1em; height: 1em; }
+.bravo-sub { font-size: 17px; color: #648084; line-height: 1.5; margin: 6px 0; max-width: 380px; }
+.bravo-prof { position: relative; right: auto; bottom: auto; width: 185px; margin: 0 auto 10px; transform: none; }
+.bravo-card .next { width: 100%; font-size: 20px; white-space: normal; }
+.bravo-streak { color: #9b742d; font-size: 16px; margin-bottom: 14px; }
+.dialog-emblem { font-size: 54px; margin-bottom: 10px; }
+.confirm-card h3 { font-size: 26px; line-height: 1.3; }
+.confirm-card h3 small { display: block; margin-top: 10px; color: #6f8585; font-size: 16px; line-height: 1.5; font-weight: 500; }
+/* Le coffre est une illustration interactive, pas un décor peint dans la page. */
+.treasure { gap: 14px; padding: 20px 0; }
+.treasure .treasure-kicker { color: #fff3bf; background: #154c65d9; border: 1px solid #e6cd91; padding: 5px 14px; border-radius: 20px; }
+.treasure h2 { font-size: clamp(30px, 4vw, 46px); line-height: 1.12; color: #fffaf0; -webkit-text-stroke: 1px #183452; paint-order: stroke fill; text-shadow: 0 3px #193858; }
+.treasure p.tap-msg { color: #193858; background: #fff6dc; border: 1px solid #e1cca0; border-radius: 20px; padding: 9px 18px; font-size: 17px; -webkit-text-stroke: 0; }
+.treasure-prof { width: min(460px, 100%); gap: 0; }
+.treasure-prof .prof-wrap { width: 125px; }
+.treasure-prof .bubble { font-size: 16px; border: 1px solid #d9c89d; box-shadow: 0 3px #cfbc89; }
+.treasure-prof .bubble-text { color: #3d6271; }
+.treasure-isle { width: min(420px, 100%); height: 300px; margin: 0; display: flex; align-items: flex-start; justify-content: center; }
+.treasure-shore { position: absolute; z-index: 0; bottom: -14px; left: 0; width: 100%; height: auto; opacity: .75; }
+.ti-land, .ti-palm, .chest-body, .chest-lid { display: none; }
+.chest { width: 300px; height: 235px; margin: 0; padding: 0; outline-offset: 2px; }
+.chest-art { display: block; position: absolute; width: 100%; height: auto; inset: 0; pointer-events: none; filter: drop-shadow(0 10px 5px #00384b44); }
+.chest-open { display: none; }
+.chest.open .chest-closed { display: none; }
+.chest.open .chest-open { display: block; animation: pop .5s; }
+.chest-rays { z-index: -1; }
+.chest-reward { z-index: 3; font-size: 55px; }
+.treasure-record { border: 2px solid #a68649; background: #fff7df; box-shadow: 0 4px #cfaf73; padding: 20px; width: 100%; }
+.treasure-result { width: min(560px, 100%); gap: 20px; margin-top: 0; }
+.treasure-result .card { font-size: 17px; line-height: 1.6; }
+.treasure-result .total { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 44px; color: #183452; margin: 4px 0 10px; }
+.treasure-result .total small { font-size: 20px; color: #7b887c; }
+.treasure-result .row { width: 100%; }
+.treasure-result .btn { font-size: 17px; }
+/* Petits écrans : cibles tactiles généreuses et aucun élément coupé. */
+@media (max-width: 760px) {
+  .art-home { padding: 0 18px 22px; }
+  .home-nav { padding: 17px 0; }
+  .home-brand { font-size: 17px; }
+  .home-brand > .ui-icon { width: 28px; height: 28px; }
+  .home-map { font-size: 14px; padding: 8px 12px; }
+  .home-map .ui-icon { display: none; }
+  .home-hero { grid-template-columns: 1fr; gap: 6px; margin: 22px auto 55px; }
+  .hero-copy { text-align: center; }
+  .art-home .title { font-size: clamp(42px, 10vw, 64px); margin-bottom: 18px; }
+  .art-home .subtitle { font-size: 17px; }
+  .home-actions { justify-content: center; gap: 18px; margin: 24px 0 12px; }
+  .home-actions .go-btn { min-width: 200px; }
+  .hero-guide { margin: 10px auto 0; max-width: 450px; text-align: left; }
+  .hero-guide .prof-wrap { width: 100px; margin-left: -12px; }
+  .hero-guide .bubble { font-size: 14px; }
+  .hero-art { max-width: 430px; width: 100%; margin: 0 auto; padding: 0 8px 25px; }
+  .hero-island { width: 100%; margin: 0; }
+  .hero-stamp { font-size: 11px; padding: 11px 14px; bottom: -10px; left: 0; }
+  .hero-boat { right: 6%; bottom: 0; width: 24%; }
+  .preparation-head h2 { font-size: 28px; }
+  .preparation-head p { font-size: 15px; }
+  .art-home .setup { grid-template-columns: 1fr; gap: 22px; }
+  .setup-section { padding: 20px 17px; }
+  .setup-section legend { font-size: 18px; padding: 0 7px; }
+  .crew-settings, .sound-settings { order: initial; grid-column: auto; }
+  .art-home .prof-pick { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .art-home .prof-mini { max-width: 130px; }
+  .prof-card b { font-size: 15px; }
+  .prof-card small { font-size: 12px; }
+  .voice-pick { flex-wrap: wrap; }
+  .voice-pick input, .voice-pick select { min-width: 130px; }
+  .voice-pick .seg-btn { white-space: normal; }
+  .game-footer { font-size: 12px; }
+  .chart-crew .chart-professor-svg { width: 230px; margin-left: -25px; transform: none; }
+  .marine-voyage .topbar { padding: 9px 8px; gap: 5px; }
+  .marine-voyage .topbar .icon-btn { width: 40px; height: 40px; font-size: 19px; border-radius: 14px; }
+  .marine-voyage .star-count { font-size: 17px; padding: 6px 8px; }
+  .marine-voyage .track { margin: 0 9px; }
+  .marine-voyage .node { width: 21px; height: 21px; font-size: 11px; }
+  .marine-voyage .track-avatar { width: 31px; }
+  .marine-voyage .chest-node { width: 25px; font-size: 21px; }
+  .voyage-caption { margin-top: 18px; }
+  .voyage-caption b { font-size: 21px; }
+  .marine-voyage .stage { padding-left: 10px; padding-right: 10px; }
+  .marine-voyage .room { padding: 0; gap: 12px; border-radius: 0; }
+  .exercise-meta { width: calc(100% + 28px); padding: 10px 14px; font-size: 11px; border-radius: 21px 21px 0 0; }
+  .marine-voyage .guide { gap: 0; align-items: center; }
+  .marine-voyage .guide-face.prof-face { width: 70px; margin-left: -8px; }
+  .marine-voyage .bubble { padding: 10px 12px; gap: 8px; font-size: 16px; flex-wrap: wrap; }
+  .marine-voyage .bubble-text { min-width: 0; flex: 1 1 120px; }
+  .marine-voyage .bubble .round-btn { width: 36px; height: 36px; min-width: 36px; font-size: 17px; }
+  .marine-voyage .sentence { font-size: 27px; padding: 12px 16px; }
+  .marine-voyage .big-number { font-size: 40px; padding: 12px 15px; }
+  .marine-voyage .big-emoji { width: 116px; height: 116px; font-size: 83px; }
+  .marine-voyage .room-body { gap: 14px; }
+  .marine-voyage .islands, .marine-voyage .islands.n4 { --cw: clamp(112px, 31vw, 150px); gap: 40px 28px; padding-top: 12px; }
+  .marine-voyage .isle-card { padding: 8px; min-height: calc(var(--cw) * .7); }
+  .marine-voyage .islands .tri-isle { --cw: clamp(123px, 35vw, 170px); }
+  .marine-voyage .daily-word { font-size: 38px; padding: 9px 24px; }
+  .marine-voyage .scene.big .who, .marine-voyage .scene.big .what { font-size: 40px; }
+  .marine-voyage .blocks-card { max-width: 100%; padding: 13px; }
+  .marine-voyage .vault { gap: 12px; }
+  .marine-voyage .vault-box { padding: 12px; max-width: 100%; }
+  .marine-voyage .vault-btns { gap: 10px; }
+  .marine-voyage .vault-btns .btn { font-size: 16px; padding: 10px 13px; }
+  .marine-voyage .du { gap: 8px; }
+  .marine-voyage .du-col { padding: 7px 9px; }
+  .marine-voyage .du-col span { font-size: 12px; }
+  .marine-voyage .du-col b { font-size: 31px; }
+  .marine-voyage .hint-box, .marine-voyage .explain { padding: 12px; font-size: 17px; }
+  .marine-voyage .ex-compare, .marine-voyage .ex-dets { grid-template-columns: 1fr; }
+  .marine-voyage .ex-pair { gap: 9px; }
+  .marine-voyage .ex-num, .marine-voyage .ex-word { min-width: 0; max-width: 100%; }
+  .marine-voyage .tile { padding: 9px 12px; font-size: 25px; }
+  .marine-voyage .order-hint, .marine-voyage .vault-tip { font-size: 15px; text-align: center; }
+  .scenic-left { width: 220px; left: -25%; bottom: 0; opacity: .4; }
+  .scenic-right { width: 170px; right: -25%; opacity: .3; }
+  .room-banner { padding: 16px 20px; }
+  .room-banner b { font-size: 25px; }
+  .bravo-card, .confirm-card { padding: 24px 20px; }
+  .bravo-prof { width: 155px; }
+  .bravo-sub { font-size: 16px; }
+  .bravo-card .next { font-size: 18px; padding: 13px 18px; }
+  .bravo-stars { gap: 10px; }
+  .bstar { font-size: 44px; }
+  .confirm-card h3 { font-size: 24px; }
+  .confirm-card .row { gap: 12px; }
+  .confirm-card .btn { font-size: 17px; }
+  .treasure { padding-top: 12px; }
+  .treasure h2 { font-size: 32px; }
+  .treasure-prof .prof-wrap { width: 105px; }
+  .treasure-prof .bubble { font-size: 15px; }
+  .treasure-isle { height: 250px; }
+  .chest { width: 260px; height: 210px; }
+  .treasure-result .row { flex-direction: column; }
+  .treasure-result .btn { width: 100%; }
+}
+@media (max-width: 360px) {
+  .home-brand { font-size: 15px; }
+  .home-brand > .ui-icon { width: 24px; }
+  .home-nav { gap: 8px; }
+  .home-map { padding: 8px 10px; }
+  .art-home .title { font-size: 40px; }
+  .setup-section { padding: 18px 13px; }
+  .seg { gap: 5px; }
+  .seg button { padding: 9px 5px; font-size: 14px; }
+  .marine-voyage .islands, .marine-voyage .islands.n4 { --cw: 104px; gap: 36px 24px; }
+  .marine-voyage .guide-face.prof-face { width: 68px; }
+  .marine-voyage .bubble { font-size: 15px; }
+  .marine-voyage .big-number { font-size: 34px; }
+}
+/* La mer et le bateau font partie de la scène de jeu, pas d'un panneau. */
+.scene-water-motion { position: absolute; inset: 22% 0 0; pointer-events: none; background: url('../assets/marine/water.webp') 0 0 / 750px auto repeat; opacity: .3; mask-image: linear-gradient(transparent, #000 35%); animation: oceanCurrent 22s linear infinite; }
+@keyframes oceanCurrent { to { background-position: 160px 70px; } }
+.world-stars .scene-water-motion { opacity: .15; filter: brightness(.5) hue-rotate(30deg); }
+.world-ice .scene-water-motion { opacity: .22; filter: saturate(.6); }
+.marine-voyage .voyage-caption { margin-top: 12px; margin-bottom: 8px; }
+.marine-voyage .voyage-caption > span { display: none; }
+.marine-voyage .islands.navigating .island { animation-play-state: paused; cursor: progress; }
+.marine-voyage .island.sailing-to .isle-card { border-color: #c99831; box-shadow: 0 4px #a88756, 0 0 0 4px #ffe491b3; }
+.marine-voyage .isle-land::after { content: ''; position: absolute; z-index: -1; inset: 58% -9% -8%; border: 2px solid #e8ffffb3; border-radius: 50%; box-shadow: 0 0 0 5px #bff7ff35; animation: shoreRipple 3.4s ease-in-out infinite; animation-delay: calc(var(--i) * -.6s); }
+@keyframes shoreRipple { 50% { transform: scale(1.06, 1.16); opacity: .6; } }
+.marine-voyage .boat { filter: drop-shadow(0 5px 3px #075a7d66); }
+.marine-voyage .boat .wake { left: 0; right: 0; bottom: -3%; height: 23%; border: 2px solid #efffffc9; background: radial-gradient(ellipse, #e4ffff66, transparent 70%); box-shadow: 0 0 0 5px #c8faff33; }
+.marine-voyage .boat.sailing .wake::after, .marine-voyage .boat.cruising .wake::after { content: ''; position: absolute; left: 30%; right: 30%; top: 70%; height: 160%; border-radius: 0 0 50% 50%; transform-origin: 50% 0; transform: rotate(var(--trail-angle, 0deg)); background: repeating-linear-gradient(transparent 0 9px, #e8ffff99 10px 12px, transparent 13px 20px); animation: sailingFoam .7s linear infinite; }
+@keyframes sailingFoam { to { background-position: 0 20px; } }
+.sailing-status { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; white-space: nowrap; clip-path: inset(50%); }
+@media (max-width: 760px) {
+  .marine-voyage .voyage-caption b { font-size: 18px; }
+  .marine-voyage .stage { padding-top: 4px; }
+  .marine-voyage .big-number { font-size: 38px; padding: 8px 19px; }
+  .marine-voyage .scene.big { padding: 10px 17px; }
+  .marine-voyage .scenic-left { opacity: .23; }
+  .marine-voyage .scenic-right { opacity: .2; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  .bstar { transform: none; }
+}
