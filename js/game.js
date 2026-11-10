@@ -540,7 +540,9 @@ async function sailTo(x, b, scale = 1) {
   const el = boatEl();
   const r = el.getBoundingClientRect();
   const dist = Math.hypot(x - r.left, b - (innerHeight - r.bottom));
-  const dur = Math.min(1.6, Math.max(0.45, dist / 480));
+  const dur = Math.min(2, Math.max(0.7, dist / 300));
+  const deltaBottom = b - (innerHeight - r.bottom);
+  el.style.setProperty('--trail-angle', `${Math.atan2(x - r.left, deltaBottom) * 180 / Math.PI}deg`);
   el.style.setProperty('--tilt', `${x > r.left + 4 ? 7 : x < r.left - 4 ? -7 : 0}deg`);
   el.classList.add('sailing');
   placeBoat(x, b, dur, scale);
@@ -551,7 +553,18 @@ async function sailTo(x, b, scale = 1) {
 // Navigue vers une île (frac < 1 : s'arrête en chemin)
 async function sailToIsland(isle, frac = 1) {
   const el = boatEl();
-  const r = isle.getBoundingClientRect();
+  if (!el || !isle.isConnected) return;
+  const shore = isle.querySelector('.isle-land') || isle;
+  let r = shore.getBoundingClientRect();
+  const topbar = document.querySelector('.topbar');
+  const safeTop = (topbar ? topbar.getBoundingClientRect().bottom : 0) + 20;
+  const safeBottom = Math.max(32, el.offsetHeight * 0.25);
+  if (r.top < safeTop || r.bottom > innerHeight - safeBottom) {
+    isle.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+    await new Promise(requestAnimationFrame);
+    if (!el.isConnected || !isle.isConnected) return;
+    r = shore.getBoundingClientRect();
+  }
   const bw = el.offsetWidth;
   const tx = r.left + r.width / 2 - bw / 2;
   const tb = innerHeight - r.bottom - el.offsetHeight * 0.22;
@@ -590,31 +603,47 @@ function islandEl(html, i) {
 
 function buildIslands(container, items, api, onWin) {
   const row = islandsRow(items.length);
+  const run = RUN;
   let done = false;
   let busy = false;
   items.forEach((it, i) => {
     const isle = islandEl(it.html, i);
     isle.addEventListener('click', async () => {
-      if (done || busy || isle.classList.contains('rocky')) return;
+      if (done || busy || isle.classList.contains('rocky') || !stillHere(run)) return;
       busy = true;
-      if (it.correct) {
-        done = true;
-        row.classList.add('resolved');
-        isle.classList.add('chosen');
-        await sailToIsland(isle, 1);
-        isle.classList.add('won');
-        SFX.unlock();
-        if (onWin) onWin();
-        await sleep(400);
-        api.success();
-      } else {
-        await sailToIsland(isle, 0.55);
-        restart(boatEl(), 'bonk');
-        isle.classList.add('rocky');
-        api.fail(undefined, it.value);
-        await sleep(450);
-        await sailHome();
+      row.classList.add('navigating');
+      row.setAttribute('aria-busy', 'true');
+      isle.classList.add('sailing-to');
+      const status = document.getElementById('sailing-status');
+      if (status) status.textContent = `Le bateau navigue vers l’île ${i + 1}.`;
+      try {
+        if (it.correct) {
+          done = true;
+          row.classList.add('resolved');
+          isle.classList.add('chosen');
+          await sailToIsland(isle, 1);
+          if (!stillHere(run)) return;
+          isle.classList.add('won');
+          SFX.unlock();
+          if (onWin) onWin();
+          await sleep(400);
+          if (!stillHere(run)) return;
+          api.success();
+        } else {
+          await sailToIsland(isle, 0.55);
+          if (!stillHere(run)) return;
+          restart(boatEl(), 'bonk');
+          isle.classList.add('rocky');
+          api.fail(undefined, it.value);
+          await sleep(450);
+          if (!stillHere(run)) return;
+          await sailHome();
+        }
+      } finally {
         busy = false;
+        isle.classList.remove('sailing-to');
+        row.classList.remove('navigating');
+        row.removeAttribute('aria-busy');
       }
     });
     row.append(isle);
@@ -879,6 +908,7 @@ const ROOM_TYPES = {
     render(body, q, api) {
       let idx = 0;
       let busy = false;
+      const run = RUN;
       const card = h('<div class="clue-card"><span class="tri-count"></span><div class="sentence clue-text"></div><div class="clue-tap hidden"></div><div class="clue-rule hidden"></div></div>');
       const text = card.querySelector('.clue-text');
       const tap = card.querySelector('.clue-tap');
@@ -923,24 +953,39 @@ const ROOM_TYPES = {
         if (idx > 0) { api.say('Singulier ou pluriel ? Lis bien, puis choisis l’île !'); }
       }
 
-      function choose(plural, isle) {
+      async function choose(plural, isle) {
         if (q.phase === 'indices' && !busy) {
           // les îles ne servent plus : on montre où toucher
           api.say('Maintenant, touche les indices dans les mots 👆');
           restart(tap, 'bump');
           return;
         }
-        if (busy || q.phase !== 'choix') return;
+        if (busy || q.phase !== 'choix' || !stillHere(run)) return;
         const g = q.items[idx];
-        if (g.plural !== plural) {
-          restart(isle, 'shake');
-          api.fail(plural ? 'Non, il n’y en a qu’un seul ! Regarde bien 👀' : 'Non, il y en a plusieurs ! Regarde bien 👀', { g });
-          return;
+        busy = true;
+        row.classList.add('navigating');
+        row.setAttribute('aria-busy', 'true');
+        isle.classList.add('sailing-to');
+        try {
+          await sailToIsland(isle, g.plural === plural ? 1 : 0.55);
+          if (!stillHere(run)) return;
+          if (g.plural !== plural) {
+            restart(boatEl(), 'bonk');
+            api.fail(plural ? 'Non, il n’y en a qu’un seul ! Regarde bien 👀' : 'Non, il y en a plusieurs ! Regarde bien 👀', { g });
+            await sleep(450);
+            if (stillHere(run)) await sailHome();
+            return;
+          }
+          SFX.pop();
+          isle.classList.add('chosen-ok');
+          row.classList.add('faded');
+          startClues(g);
+        } finally {
+          busy = false;
+          row.classList.remove('navigating');
+          row.removeAttribute('aria-busy');
+          isle.classList.remove('sailing-to');
         }
-        SFX.pop();
-        isle.classList.add('chosen-ok');
-        row.classList.add('faded');
-        startClues(g);
       }
 
       // 2e temps : toucher les indices dans les mots
@@ -1679,7 +1724,7 @@ const stillHere = (run) => RUN === run && !!document.getElementById('stage');
 function buildZone(z) {
   const world = RUN ? RUN.w.id : 'tropical';
   return h(`<div class="zone illustrated-zone world-${world}" style="--sky1:${z.sky[0]};--sky2:${z.sky[1]};--sea1:${z.sea[0]};--sea2:${z.sea[1]}">
-    <div class="scene-ocean"></div><div class="scene-light"></div>
+    <div class="scene-ocean"></div><div class="scene-water-motion" aria-hidden="true"></div><div class="scene-light"></div>
     <img class="scenic-island scenic-left" src="assets/marine/${world}.webp" alt="" aria-hidden="true">
     <img class="scenic-island scenic-right" src="assets/marine/${world}.webp" alt="" aria-hidden="true">
     <div class="scene-sparkles" aria-hidden="true"></div>
@@ -1736,6 +1781,7 @@ function startWorld(w) {
     </header>
     <div class="voyage-caption"><span>LE CARNET D’AVENTURE</span><b>${esc(w.name)}</b></div>
     <main class="stage away" id="stage"></main>
+    <p class="sailing-status" id="sailing-status" role="status" aria-live="polite"></p>
     <div class="boat" id="boat"><span class="wake"></span>${boatSVG(S.boat)}</div>
   </section>`;
   const first = buildZone(run.zone);
@@ -1774,7 +1820,7 @@ function startWorld(w) {
 }
 
 addEventListener('resize', () => {
-  if (!RUN || RUN.busy || !boatEl()) return;
+  if (!RUN || RUN.busy || !boatEl() || boatEl().classList.contains('sailing')) return;
   const p = boatHome();
   placeBoat(p.x, p.b);
 });
@@ -1856,7 +1902,7 @@ function enterStep() {
   const explainBox = el.querySelector('.explain');
   const say = (t) => { bubbleText.textContent = t; restart(bubble, 'bump'); };
   const instr = T.instruction(q);
-  say(RUN.index === 0 && !RUN.greeted ? `${profLine('start')} ${instr}` : instr);
+  say(instr);
   RUN.greeted = true;
   setTimeout(() => speak(instr), 300);
 

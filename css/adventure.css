@@ -125,7 +125,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
 .world-stars .scene-ocean { filter: brightness(.32) hue-rotate(30deg); }
 .world-stars .scene-light { background: linear-gradient(#301454, transparent, #24245b); opacity: .55; }
 .world-stars .scene-sparkles { position: absolute; inset: 0; opacity: .7; background-image: radial-gradient(circle, #ffedbd 1px, transparent 2px), radial-gradient(circle, #fff 1px, transparent 2px); background-size: 97px 107px, 183px 151px; background-position: 0 0, 43px 67px; }
-/* Carnet d'exercices : hiérarchie identique pour toutes les activités. */
+/* Les consignes flottent au-dessus de la mer ; les réponses sont des îles. */
 .marine-voyage { --cw: clamp(128px, 19vw, 180px); min-height: 100dvh; }
 .marine-voyage .topbar { padding: 12px 20px; background: #fffaf0f5; border-bottom: 2px solid #193858; box-shadow: 0 4px 20px #06394b18; }
 .marine-voyage .topbar .icon-btn { width: 46px; height: 46px; border-radius: 16px; font-size: 23px; }
@@ -138,11 +138,11 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
 .voyage-caption { margin: 22px 12px 8px; gap: 6px; }
 .voyage-caption b { font-size: 25px; letter-spacing: .01em; }
 .marine-voyage .stage { max-width: 1050px; padding-top: 8px; }
-.marine-voyage .room { padding: 0 28px 30px; gap: 18px; border: 2px solid #183452; border-radius: 28px; background: #fff9eafc; box-shadow: 0 7px #1e566c, 0 15px 35px #003b5526; overflow: visible; }
-.exercise-meta { width: calc(100% + 56px); padding: 11px 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #f5eacc; border-bottom: 1px solid #e0cda0; border-radius: 26px 26px 0 0; color: #6f704f; font-size: 12px; letter-spacing: .025em; }
+.marine-voyage .room { padding: 0; gap: 14px; border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }
+.exercise-meta { display: none; width: calc(100% + 56px); padding: 11px 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #f5eacc; border-bottom: 1px solid #e0cda0; border-radius: 26px 26px 0 0; color: #6f704f; font-size: 12px; letter-spacing: .025em; }
 .exercise-meta > span:first-child { display: flex; align-items: center; gap: 7px; }
 .exercise-meta > span:last-child { min-width: 44px; padding: 4px 8px; text-align: center; background: #fff8e5; border-radius: 20px; }
-.marine-voyage .guide { border: 0; gap: 10px; padding: 0; }
+.marine-voyage .guide { width: min(760px, 100%); border: 0; gap: 10px; padding: 0; }
 .marine-voyage .guide-face.prof-face { width: 122px; margin-left: -18px; }
 .marine-voyage .bubble { background: #edf6ef; border: 1px solid #bed3c5; border-radius: 20px; padding: 14px 16px; color: #2e5360; font-size: clamp(17px, 1.9vw, 21px); font-weight: 500; line-height: 1.4; }
 .marine-voyage .bubble::before { border-right-color: #bed3c5; }
@@ -157,11 +157,11 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
 .marine-voyage .listen-btn { color: #385c68; border: 2px solid #c3d8d1; background: #edf7f0; box-shadow: 0 4px #c5d6c9; padding: 14px 25px; border-radius: 24px; }
 .marine-voyage .daily-word { font-size: clamp(37px, 6vw, 62px); padding: 10px 35px; }
 .marine-voyage .blank { color: #ba7c29; border-bottom-color: #d5a44a; }
-.marine-voyage .islands { gap: clamp(16px, 3vw, 32px); align-items: flex-start; padding: 6px 0 10px; }
-.marine-voyage .island { margin-bottom: 0; padding-bottom: 22px; }
+.marine-voyage .islands { justify-content: space-evenly; gap: 42px 28px; align-items: flex-start; padding: 20px 0 10px; }
+.marine-voyage .island { margin-bottom: 0; padding-bottom: 0; scroll-margin-top: 105px; scroll-margin-bottom: 120px; animation: islandRise .6s backwards, isleBob 4s ease-in-out infinite; animation-delay: calc(var(--i) * .1s), calc(var(--i) * -.7s); }
 .marine-voyage .isle-card { position: relative; z-index: 1; width: 100%; min-height: calc(var(--cw) * .66); padding: 10px; border: 2px solid #7c6745; border-radius: 17px; background: linear-gradient(#fffdf2, #fff1cf); box-shadow: inset 0 0 0 3px #fff7df, 0 4px #a88756; }
-.marine-voyage .isle-post { position: relative; z-index: 1; width: 8px; height: 17px; border: 1px solid #78512c; background: #b48650; }
-.marine-voyage .isle-land { width: 118%; height: calc(var(--cw) * .55); margin-top: calc(var(--cw) * -.12); border: 0; background: none; box-shadow: none; }
+.marine-voyage .isle-post { position: relative; z-index: 1; width: 8px; height: 12px; border: 1px solid #78512c; background: #b48650; }
+.marine-voyage .isle-land { width: 118%; height: calc(var(--cw) * .34); margin-top: calc(var(--cw) * -.09); border: 0; background: none; box-shadow: none; }
 .answer-island-art { position: absolute; width: 100%; height: auto; left: 0; bottom: 0; pointer-events: none; }
 .marine-voyage .island.won .isle-card { background: #def2d8; border-color: #298c71; box-shadow: inset 0 0 0 3px #f0ffe8, 0 4px #478e65, 0 0 0 4px #ffe18e; }
 .marine-voyage .island.won::before { content: '✓'; color: #fff; background: #23876c; border: 2px solid #fff9df; border-radius: 50%; width: 34px; height: 34px; top: -18px; font-size: 25px; text-align: center; }
@@ -277,17 +277,18 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
   .voyage-caption { margin-top: 18px; }
   .voyage-caption b { font-size: 21px; }
   .marine-voyage .stage { padding-left: 10px; padding-right: 10px; }
-  .marine-voyage .room { padding: 0 14px 22px; gap: 16px; border-radius: 23px; }
+  .marine-voyage .room { padding: 0; gap: 12px; border-radius: 0; }
   .exercise-meta { width: calc(100% + 28px); padding: 10px 14px; font-size: 11px; border-radius: 21px 21px 0 0; }
   .marine-voyage .guide { gap: 0; align-items: center; }
-  .marine-voyage .guide-face.prof-face { width: 85px; margin-left: -17px; }
-  .marine-voyage .bubble { padding: 11px 12px; gap: 10px; font-size: 16px; }
+  .marine-voyage .guide-face.prof-face { width: 70px; margin-left: -8px; }
+  .marine-voyage .bubble { padding: 10px 12px; gap: 8px; font-size: 16px; flex-wrap: wrap; }
+  .marine-voyage .bubble-text { min-width: 0; flex: 1 1 120px; }
   .marine-voyage .bubble .round-btn { width: 36px; height: 36px; min-width: 36px; font-size: 17px; }
   .marine-voyage .sentence { font-size: 27px; padding: 12px 16px; }
   .marine-voyage .big-number { font-size: 40px; padding: 12px 15px; }
   .marine-voyage .big-emoji { width: 116px; height: 116px; font-size: 83px; }
-  .marine-voyage .room-body { gap: 18px; }
-  .marine-voyage .islands, .marine-voyage .islands.n4 { --cw: clamp(112px, 33vw, 160px); gap: 17px 22px; padding-top: 5px; }
+  .marine-voyage .room-body { gap: 14px; }
+  .marine-voyage .islands, .marine-voyage .islands.n4 { --cw: clamp(112px, 31vw, 150px); gap: 40px 28px; padding-top: 12px; }
   .marine-voyage .isle-card { padding: 8px; min-height: calc(var(--cw) * .7); }
   .marine-voyage .islands .tri-isle { --cw: clamp(123px, 35vw, 170px); }
   .marine-voyage .daily-word { font-size: 38px; padding: 9px 24px; }
@@ -338,10 +339,34 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
   .setup-section { padding: 18px 13px; }
   .seg { gap: 5px; }
   .seg button { padding: 9px 5px; font-size: 14px; }
-  .marine-voyage .islands, .marine-voyage .islands.n4 { --cw: 108px; gap: 16px 20px; }
+  .marine-voyage .islands, .marine-voyage .islands.n4 { --cw: 104px; gap: 36px 24px; }
   .marine-voyage .guide-face.prof-face { width: 68px; }
   .marine-voyage .bubble { font-size: 15px; }
   .marine-voyage .big-number { font-size: 34px; }
+}
+/* La mer et le bateau font partie de la scène de jeu, pas d'un panneau. */
+.scene-water-motion { position: absolute; inset: 22% 0 0; pointer-events: none; background: url('../assets/marine/water.webp') 0 0 / 750px auto repeat; opacity: .3; mask-image: linear-gradient(transparent, #000 35%); animation: oceanCurrent 22s linear infinite; }
+@keyframes oceanCurrent { to { background-position: 160px 70px; } }
+.world-stars .scene-water-motion { opacity: .15; filter: brightness(.5) hue-rotate(30deg); }
+.world-ice .scene-water-motion { opacity: .22; filter: saturate(.6); }
+.marine-voyage .voyage-caption { margin-top: 12px; margin-bottom: 8px; }
+.marine-voyage .voyage-caption > span { display: none; }
+.marine-voyage .islands.navigating .island { animation-play-state: paused; cursor: progress; }
+.marine-voyage .island.sailing-to .isle-card { border-color: #c99831; box-shadow: 0 4px #a88756, 0 0 0 4px #ffe491b3; }
+.marine-voyage .isle-land::after { content: ''; position: absolute; z-index: -1; inset: 58% -9% -8%; border: 2px solid #e8ffffb3; border-radius: 50%; box-shadow: 0 0 0 5px #bff7ff35; animation: shoreRipple 3.4s ease-in-out infinite; animation-delay: calc(var(--i) * -.6s); }
+@keyframes shoreRipple { 50% { transform: scale(1.06, 1.16); opacity: .6; } }
+.marine-voyage .boat { filter: drop-shadow(0 5px 3px #075a7d66); }
+.marine-voyage .boat .wake { left: 0; right: 0; bottom: -3%; height: 23%; border: 2px solid #efffffc9; background: radial-gradient(ellipse, #e4ffff66, transparent 70%); box-shadow: 0 0 0 5px #c8faff33; }
+.marine-voyage .boat.sailing .wake::after, .marine-voyage .boat.cruising .wake::after { content: ''; position: absolute; left: 30%; right: 30%; top: 70%; height: 160%; border-radius: 0 0 50% 50%; transform-origin: 50% 0; transform: rotate(var(--trail-angle, 0deg)); background: repeating-linear-gradient(transparent 0 9px, #e8ffff99 10px 12px, transparent 13px 20px); animation: sailingFoam .7s linear infinite; }
+@keyframes sailingFoam { to { background-position: 0 20px; } }
+.sailing-status { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; white-space: nowrap; clip-path: inset(50%); }
+@media (max-width: 760px) {
+  .marine-voyage .voyage-caption b { font-size: 18px; }
+  .marine-voyage .stage { padding-top: 4px; }
+  .marine-voyage .big-number { font-size: 38px; padding: 8px 19px; }
+  .marine-voyage .scene.big { padding: 10px 17px; }
+  .marine-voyage .scenic-left { opacity: .23; }
+  .marine-voyage .scenic-right { opacity: .2; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
